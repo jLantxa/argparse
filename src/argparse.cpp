@@ -6,18 +6,21 @@ namespace argparse {
 
 namespace env {
 
-[[nodiscard]] const std::span<const char *> GetArgs(int argc,
-                                                    const char *argv[]) {
+[[nodiscard]] const std::span<const char*> GetArgs(int argc,
+                                                   const char* argv[]) {
   return {argv, static_cast<std::size_t>(argc)};
 }
 
 }  // namespace env
 
 Positional::Positional(const std::string& _name)
-: name(_name),
-  nargs(NArgs::NUMERIC),
-  num_args(1)
-{}
+    : name(_name), nargs(NArgs::NUMERIC), num_args(1) {
+  if (name.empty()) {
+    throw std::runtime_error("Arguments cannot have an empty name.");
+  } else if (name.starts_with('-')) {
+    throw std::runtime_error("Positional arguments cannot start with '-'");
+  }
+}
 
 Positional& Positional::NumArgs(std::size_t num) {
   if (num == 0) {
@@ -44,15 +47,37 @@ std::pair<NArgs, std::size_t> Positional::GetNArgs() const {
   return {nargs, num_args};
 }
 
+static bool IsValidFlagName(const std::string& flag) {
+  // TODO: Check that flag contains no whitespace
+  return flag.starts_with("-");
+}
 
-Optional::Optional(const std::string& _name, const std::string& f1, const std::string& f2)
-: name(_name),
-  flag1(f1),
-  flag2(f2),
-  required(false),
-  nargs(NArgs::OPTIONAL),
-  num_args(0)
-{}
+Optional::Optional(const std::string& _name, const std::string& f1,
+                   const std::string& f2)
+    : name(_name),
+      flag1(f1),
+      flag2(f2),
+      required(false),
+      nargs(NArgs::OPTIONAL),
+      num_args(0) {
+  // HINT: f2 can be optionally empty
+
+  if (_name.empty()) {
+    throw std::runtime_error("Arguments cannot have an empty name.");
+  }
+
+  if (f1.empty() && !f2.empty()) {
+    throw std::runtime_error("Optional flags cannot have an empty name.");
+  }
+
+  const bool valid_flag_markers =
+      (f1.empty() || (!f1.empty() && IsValidFlagName(f1))) &&
+      (f2.empty() || (!f2.empty() && IsValidFlagName(f2)));
+
+  if (!valid_flag_markers) {
+    throw std::runtime_error("Optional arguments must start with '-' or '--'");
+  }
+}
 
 Optional& Optional::NumArgs(std::size_t num) {
   nargs = NArgs::NUMERIC;

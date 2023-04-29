@@ -5,17 +5,24 @@
 
 #include "argparse.hpp"
 
-TEST(argparse, GetArgs) {
+TEST(env, GetArgs) {
   int argc = 5;
-  const char *argv[5]{
+  const char* argv[5]{
       "arg0", "1", "two", "tres", "end",
   };
 
-  const std::span<const char *> args = argparse::env::GetArgs(argc, argv);
+  const std::span<const char*> args = argparse::env::GetArgs(argc, argv);
 
   ASSERT_EQ(args.size(), 5);
   ASSERT_THAT(args,
               ::testing::ElementsAreArray({"arg0", "1", "two", "tres", "end"}));
+}
+
+TEST(PositionalArgument, valid_names) {
+  EXPECT_NO_THROW(argparse::Positional pos("pos"));
+
+  EXPECT_THROW(argparse::Positional pos("-pos"), std::runtime_error);
+  EXPECT_THROW(argparse::Positional pos(""), std::runtime_error);
 }
 
 TEST(PositionalArgument, builder) {
@@ -36,7 +43,9 @@ TEST(PositionalArgument, builder) {
 
   argparse::Positional pos2("pos2");
   argparse::Positional& pos2_ref = pos2;
-  pos2_ref.NumArgs(3).Help("Positional 2").NumArgs(argparse::NArgs::ONE_OR_MORE);
+  pos2_ref.NumArgs(3)
+      .Help("Positional 2")
+      .NumArgs(argparse::NArgs::ONE_OR_MORE);
   EXPECT_EQ(pos2.name, "pos2");
   EXPECT_EQ(pos2.nargs, argparse::NArgs::ONE_OR_MORE);
   EXPECT_EQ(pos2.help, "Positional 2");
@@ -48,7 +57,6 @@ TEST(PositionalArgument, builder) {
   EXPECT_EQ(pos3.nargs, argparse::NArgs::NUMERIC);
   EXPECT_EQ(pos3.num_args, 3);
   EXPECT_EQ(pos3.help, "Positional 3");
-
 }
 
 TEST(PositionalArgument, builder_exception) {
@@ -57,6 +65,23 @@ TEST(PositionalArgument, builder_exception) {
 
   // NumArgs cannot be 0 for Positional arguments
   EXPECT_THROW(pos0_ref.NumArgs(0), std::runtime_error);
+}
+
+TEST(OptionalArgument, valid_names_and_flags) {
+  EXPECT_NO_THROW(argparse::Optional opt("opt", "-o", "--opt"));
+  EXPECT_NO_THROW(argparse::Optional opt("-opt", "-o", "--opt"));
+  EXPECT_NO_THROW(argparse::Optional opt("-opt", "-o", ""));
+  EXPECT_NO_THROW(argparse::Optional opt("-opt", "-o"));
+  EXPECT_NO_THROW(argparse::Optional opt("-opt", "--opt"));
+  EXPECT_NO_THROW(argparse::Optional opt("-opt", "-o", "-q"));
+
+  EXPECT_THROW(argparse::Optional opt("", "-o", "--opt"), std::runtime_error);
+  EXPECT_THROW(argparse::Optional opt("", "o", "opt"), std::runtime_error);
+  EXPECT_THROW(argparse::Optional opt("-opt", "", "--opt"), std::runtime_error);
+  EXPECT_THROW(argparse::Optional opt("opt", "o", "opt"), std::runtime_error);
+  EXPECT_THROW(argparse::Optional opt("opt", "-o", "opt"), std::runtime_error);
+  EXPECT_THROW(argparse::Optional opt("opt", "o", "--opt"), std::runtime_error);
+  EXPECT_THROW(argparse::Optional opt("opt", "opt", "-o"), std::runtime_error);
 }
 
 TEST(OptionalArgument, builder) {
