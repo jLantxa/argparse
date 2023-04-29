@@ -1,10 +1,12 @@
 #pragma once
 
+#include <initializer_list>
 #include <list>
 #include <span>
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace argparse {
 
@@ -39,15 +41,13 @@ struct Positional {
 
 struct Optional final {
   std::string name;
-  std::string flag1;
-  std::string flag2;
+  std::vector<std::string> flags;
   bool required = false;
   NArgs nargs = NArgs::OPTIONAL;  // Numeric or special
   std::size_t num_args = 0;       // Number if NArgs is numeric
   std::string help;
 
-  Optional(const std::string& name, const std::string& flag1,
-           const std::string& flag2 = "");
+  Optional(const std::string& name, std::initializer_list<std::string> flags);
 
   Optional& NumArgs(std::size_t num);
   Optional& NumArgs(NArgs num);
@@ -60,11 +60,19 @@ struct Optional final {
 
 class ArgumentParser final {
  public:
+  ArgumentParser() = default;
+  ArgumentParser(const std::string& program_name,
+                 const std::string& description = "");
+
   Positional& AddPositional(const std::string& name);
-  Optional& AddOptional(const std::string& name, const std::string& flag1,
-                        const std::string& flag2 = "");
+  Optional& AddOptional(const std::string& name,
+                        std::initializer_list<std::string> flags);
+  Optional& AddOptional(const std::string& name, const std::string& flag);
 
  private:
+  std::string m_program_name;
+  std::string m_program_description;
+
   std::list<Positional> m_positionals;
   std::list<Optional> m_optionals;
 };
