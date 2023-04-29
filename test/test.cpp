@@ -119,3 +119,10 @@ TEST(OptionalArgument, builder) {
   EXPECT_TRUE(opt2.HasFlag("--long_flag"));
   EXPECT_FALSE(opt2.HasFlag("--something"));
 }
+
+TEST(ArgumentParser, create_parser_with_arguments) {
+  argparse::ArgumentParser parser;
+  EXPECT_NO_THROW(
+      parser.AddPositional("positional").Help("Positional argument");
+      parser.AddOptional("optional", "-o").Help("Optional argument"););
+}

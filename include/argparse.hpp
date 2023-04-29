@@ -61,7 +61,8 @@ struct Optional final {
 class ArgumentParser final {
  public:
   Positional& AddPositional(const std::string& name);
-  Optional& AddOptional(const std::string& name);
+  Optional& AddOptional(const std::string& name, const std::string& flag1,
+                        const std::string& flag2 = "");
 
  private:
   std::list<Positional> m_positionals;

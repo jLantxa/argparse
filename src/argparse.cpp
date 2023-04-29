@@ -110,4 +110,16 @@ bool Optional::HasFlag(const std::string& flag) const {
   return has_flag;
 }
 
+Positional& ArgumentParser::AddPositional(const std::string& name) {
+  Positional& positional = m_positionals.emplace_back(name);
+  return positional;
+}
+
+Optional& ArgumentParser::AddOptional(const std::string& name,
+                                      const std::string& flag1,
+                                      const std::string& flag2) {
+  Optional& optional = m_optionals.emplace_back(name, flag1, flag2);
+  return optional;
+}
+
 }  // namespace argparse
