@@ -60,16 +60,24 @@ struct Optional final {
   bool HasFlag(const std::string& flag) const;
 };
 
+class ArgumentMap final {
+
+};
+
 class ArgumentParser final {
  public:
   ArgumentParser() = default;
   ArgumentParser(const std::string& program_name,
                  const std::string& description = "");
 
+  void GenerateHelp(std::initializer_list<std::string> flags);
+
   Positional& AddPositional(const std::string& name);
   Optional& AddOptional(const std::string& name,
                         std::initializer_list<std::string> flags);
   Optional& AddOptional(const std::string& name, const std::string& flag);
+
+  const ArgumentMap Parse(int argc, const char* argv[]);
 
  private:
   std::string m_program_name;
@@ -77,6 +85,8 @@ class ArgumentParser final {
 
   std::list<Positional> m_positionals;
   std::list<Optional> m_optionals;
+
+  std::unordered_set<std::string> m_help_flags;
 
   std::unordered_set<std::string> m_names;
   std::unordered_set<std::string> m_flags_set;

@@ -48,6 +48,7 @@ std::pair<NArgs, std::size_t> Positional::GetNArgs() const {
   return {nargs, num_args};
 }
 
+
 static bool IsValidFlagName(const std::string& flag) {
   // TODO: Check that flag contains no whitespace
   return (!flag.empty() && flag.starts_with("-"));
@@ -102,9 +103,16 @@ bool Optional::HasFlag(const std::string& flag) const {
   return has_flag;
 }
 
+
 ArgumentParser::ArgumentParser(const std::string& program_name,
                                const std::string& description)
     : m_program_name(program_name), m_program_description(description) {}
+
+void ArgumentParser::GenerateHelp(std::initializer_list<std::string> flags) {
+  for (const auto& flag : flags) {
+    m_help_flags.insert(flag);
+  }
+}
 
 Positional& ArgumentParser::AddPositional(const std::string& name) {
   if (m_names.contains(name)) {
