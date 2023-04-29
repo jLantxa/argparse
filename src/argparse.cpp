@@ -107,13 +107,36 @@ ArgumentParser::ArgumentParser(const std::string& program_name,
     : m_program_name(program_name), m_program_description(description) {}
 
 Positional& ArgumentParser::AddPositional(const std::string& name) {
+  if (m_names.contains(name)) {
+    throw std::runtime_error("Argument name " + std::string{name} +
+                             " redefined.");
+  }
+  m_names.insert(name);
+
   Positional& positional = m_positionals.emplace_back(name);
   return positional;
 }
 
 Optional& ArgumentParser::AddOptional(
     const std::string& name, std::initializer_list<std::string> flags) {
+  if (m_names.contains(name)) {
+    throw std::runtime_error("Argument name " + std::string{name} +
+                             " redefined.");
+  }
+
   Optional& optional = m_optionals.emplace_back(name, flags);
+  m_names.insert(name);
+
+
+  for (const auto& flag : flags) {
+    if (m_flags_set.contains(flag)) {
+      throw std::runtime_error("Flag " + std::string{flag} + " redefined.");
+    } else {
+      m_flags_set.insert(flag);
+      m_flags_map.emplace(flag, optional);
+    }
+  }
+
   return optional;
 }
 

@@ -5,6 +5,8 @@
 #include <span>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -75,6 +77,10 @@ class ArgumentParser final {
 
   std::list<Positional> m_positionals;
   std::list<Optional> m_optionals;
+
+  std::unordered_set<std::string> m_names;
+  std::unordered_set<std::string> m_flags_set;
+  std::unordered_map<std::string, Optional&> m_flags_map;
 };
 
 }  // namespace argparse

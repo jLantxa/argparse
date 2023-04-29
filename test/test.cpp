@@ -132,3 +132,24 @@ TEST(ArgumentParser, create_parser_with_arguments) {
       parser.AddPositional("positional").Help("Positional argument");
       parser.AddOptional("optional", {"-o"}).Help("Optional argument"););
 }
+
+TEST(ArgumentParser, redefined_names_throw) {
+  argparse::ArgumentParser parser;
+  parser.AddPositional("positional").Help("Positional argument");
+  parser.AddOptional("optional", {"-o"}).Help("Positional argument");
+
+  EXPECT_THROW(parser.AddPositional("positional").Help("Redefined argument"),
+               std::runtime_error);
+  EXPECT_THROW(
+      parser.AddOptional("optional", {"-o"}).Help("Redefined argument"),
+      std::runtime_error);
+}
+
+TEST(ArgumentParser, redefined_flags_throw) {
+  argparse::ArgumentParser parser;
+  parser.AddOptional("optional", {"-o"}).Help("Positional argument");
+
+  EXPECT_THROW(parser.AddOptional("another_optional", {"-o"})
+                   .Help("Same flag with under different argument name"),
+               std::runtime_error);
+}
