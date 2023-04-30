@@ -40,6 +40,18 @@ Positional& Positional::NumArgs(NArgs num) {
   return *this;
 }
 
+Positional& Positional::NumArgs(const std::string& num) {
+  if (num == "?") {
+    return NumArgs(NArgs::OPTIONAL);
+  } else if (num == "*") {
+    return NumArgs(NArgs::OPTIONAL);
+  } else if (num == "+") {
+    return NumArgs(NArgs::ONE_OR_MORE);
+  }
+
+  throw std::runtime_error(num + " is not a valid number of arguments");
+}
+
 Positional& Positional::Help(const std::string& help_str) {
   help = help_str;
   return *this;
@@ -79,6 +91,18 @@ Optional& Optional::NumArgs(std::size_t num) {
 Optional& Optional::NumArgs(NArgs num) {
   nargs = num;
   return *this;
+}
+
+Optional& Optional::NumArgs(const std::string& num) {
+  if (num == "?") {
+    return NumArgs(NArgs::OPTIONAL);
+  } else if (num == "*") {
+    return NumArgs(NArgs::OPTIONAL);
+  } else if (num == "+") {
+    return NumArgs(NArgs::ONE_OR_MORE);
+  }
+
+  throw std::runtime_error(num + " is not a valid number of arguments");
 }
 
 Optional& Optional::Required(bool req) {

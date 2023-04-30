@@ -35,6 +35,7 @@ struct Positional {
   Positional(const std::string& name);
 
   Positional& NumArgs(std::size_t num);
+  Positional& NumArgs(const std::string& num);
   Positional& NumArgs(NArgs num);
   Positional& Help(const std::string& help);
 
@@ -52,6 +53,7 @@ struct Optional final {
   Optional(const std::string& flag);
 
   Optional& NumArgs(std::size_t num);
+  Optional& NumArgs(const std::string& num);
   Optional& NumArgs(NArgs num);
   Optional& Required(bool req);
   Optional& Help(const std::string& help);
