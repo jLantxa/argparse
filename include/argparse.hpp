@@ -38,7 +38,7 @@ struct Positional {
   Positional& NumArgs(NArgs num);
   Positional& Help(const std::string& help);
 
-  std::pair<NArgs, std::size_t> GetNArgs() const;
+  [[nodiscard]] std::pair<NArgs, std::size_t> GetNArgs() const;
 };
 
 struct Optional final {
@@ -56,8 +56,8 @@ struct Optional final {
   Optional& Required(bool req);
   Optional& Help(const std::string& help);
 
-  std::pair<NArgs, std::size_t> GetNArgs() const;
-  bool HasFlag(const std::string& flag) const;
+  [[nodiscard]] std::pair<NArgs, std::size_t> GetNArgs() const;
+  [[nodiscard]] bool HasFlag(const std::string& flag) const;
 };
 
 class Argument final {
@@ -65,12 +65,21 @@ class Argument final {
   Argument(std::span<const char*> values);
   Argument(std::span<const std::string> values);
 
-  std::size_t Size() const;
+  [[nodiscard]] std::size_t Size() const;
 
   template <typename T>
-  T As() const;
-  template <typename T>
   T As(std::size_t index) const;
+
+  template <typename T>
+  T As() const {
+    return As<T>(0);
+  }
+
+  template <typename T>
+  std::vector<T> AsVector() const;
+
+  operator std::vector<std::string>() const;
+  std::vector<std::string> operator*() const;
 
  private:
   std::vector<std::string> m_values;
@@ -79,6 +88,8 @@ class Argument final {
 class ArgumentMap final {
  public:
   void Add(const std::string& name, const Argument& arg);
+
+  [[nodiscard]] bool Has(const std::string& name) const;
 
  private:
   std::unordered_map<std::string, Argument> m_map;

@@ -131,44 +131,47 @@ TEST(Argument, AsString) {
   argparse::Argument arg(args);
   EXPECT_EQ(arg.Size(), 2);
   EXPECT_EQ(arg.As<std::string>(), "first");
-  EXPECT_EQ(arg.As<std::string>(0), "first");
   EXPECT_EQ(arg.As<std::string>(1), "second");
+  EXPECT_THAT(arg.AsVector<std::string>(),
+              ::testing::ElementsAreArray({"first", "second"}));
 }
 
 TEST(Argument, AsInt) {
-  const char* args[] = {"1", "-1"};
+  const char* args[] = {"-1", "13"};
   argparse::Argument arg(args);
   EXPECT_EQ(arg.Size(), 2);
-  EXPECT_EQ(arg.As<int>(), 1);
-  EXPECT_EQ(arg.As<int>(0), 1);
-  EXPECT_EQ(arg.As<int>(1), -1);
+  EXPECT_EQ(arg.As<int>(), -1);
+  EXPECT_EQ(arg.As<int>(1), 13);
+  EXPECT_THAT(arg.AsVector<int>(), ::testing::ElementsAreArray({-1, 13}));
 }
 
 TEST(Argument, AsLong) {
-  const char* args[] = {"13", "-13"};
+  const char* args[] = {"-10", "130"};
   argparse::Argument arg(args);
   EXPECT_EQ(arg.Size(), 2);
-  EXPECT_EQ(arg.As<long>(), 13l);
-  EXPECT_EQ(arg.As<long>(0), 13l);
-  EXPECT_EQ(arg.As<long>(1), -13l);
+  EXPECT_EQ(arg.As<int>(), -10);
+  EXPECT_EQ(arg.As<int>(1), 130);
+  EXPECT_THAT(arg.AsVector<int>(), ::testing::ElementsAreArray({-10, 130}));
 }
 
 TEST(Argument, AsFloat) {
-  std::string args[] = {std::to_string(3.14), std::to_string(0.4)};
+  const std::string args[] = {std::to_string(3.14f), std::to_string(-0.5f)};
   argparse::Argument arg(args);
   EXPECT_EQ(arg.Size(), 2);
   EXPECT_EQ(arg.As<float>(), 3.14f);
-  EXPECT_EQ(arg.As<float>(0), 3.14f);
-  EXPECT_EQ(arg.As<float>(1), 0.4f);
+  EXPECT_EQ(arg.As<float>(1), -0.5f);
+  EXPECT_THAT(arg.AsVector<float>(),
+              ::testing::ElementsAreArray({3.14f, -0.5f}));
 }
 
 TEST(Argument, AsDouble) {
-  std::string args[] = {std::to_string(3.14), std::to_string(0.4)};
+  const std::string args[] = {std::to_string(3.14), std::to_string(-0.5)};
   argparse::Argument arg(args);
   EXPECT_EQ(arg.Size(), 2);
   EXPECT_EQ(arg.As<double>(), 3.14);
-  EXPECT_EQ(arg.As<double>(0), 3.14);
-  EXPECT_EQ(arg.As<double>(1), 0.4);
+  EXPECT_EQ(arg.As<double>(1), -0.5);
+  EXPECT_THAT(arg.AsVector<double>(),
+              ::testing::ElementsAreArray({3.14, -0.5}));
 }
 
 TEST(ArgumentParser, create_parser_with_arguments) {

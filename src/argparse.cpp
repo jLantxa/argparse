@@ -102,6 +102,22 @@ bool Optional::HasFlag(const std::string& flag) const {
   return has_flag;
 }
 
+static constexpr auto StrToInt = [](const std::string& str) -> int {
+  return std::stoi(str, nullptr);
+};
+
+static constexpr auto StrToLong = [](const std::string& str) -> long {
+  return std::stol(str, nullptr);
+};
+
+static constexpr auto StrToFloat = [](const std::string& str) -> float {
+  return std::stof(str, nullptr);
+};
+
+static constexpr auto StrToDouble = [](const std::string& str) -> double {
+  return std::stod(str, nullptr);
+};
+
 Argument::Argument(std::span<const char*> values) {
   std::copy(values.begin(), values.end(), std::back_inserter(m_values));
 }
@@ -118,52 +134,68 @@ std::string Argument::As<std::string>(std::size_t index) const {
 }
 
 template <>
-std::string Argument::As<std::string>() const {
-  return As<std::string>(0);
+std::vector<std::string> Argument::AsVector<std::string>() const {
+  return m_values;
 }
 
 template <>
 int Argument::As<int>(std::size_t index) const {
-  return std::stoi(m_values[index], nullptr);
+  return StrToInt(m_values[index]);
 }
 
 template <>
-int Argument::As<int>() const {
-  return As<int>(0);
+std::vector<int> Argument::AsVector<int>() const {
+  std::vector<int> values;
+  std::transform(m_values.cbegin(), m_values.cend(), std::back_inserter(values),
+                 StrToInt);
+  return values;
 }
 
 template <>
 long Argument::As<long>(std::size_t index) const {
-  return std::stoi(m_values[index], nullptr);
+  return StrToLong(m_values[index]);
 }
 
 template <>
-long Argument::As<long>() const {
-  return As<long>(0);
+std::vector<long> Argument::AsVector<long>() const {
+  std::vector<long> values;
+  std::transform(m_values.cbegin(), m_values.cend(), std::back_inserter(values),
+                 StrToLong);
+  return values;
 }
 
 template <>
 float Argument::As<float>(std::size_t index) const {
-  return std::stof(m_values[index], nullptr);
+  return StrToFloat(m_values[index]);
 }
 
 template <>
-float Argument::As<float>() const {
-  return As<float>(0);
+std::vector<float> Argument::AsVector<float>() const {
+  std::vector<float> values;
+  std::transform(m_values.cbegin(), m_values.cend(), std::back_inserter(values),
+                 StrToFloat);
+  return values;
 }
 
 template <>
 double Argument::As<double>(std::size_t index) const {
-  return std::stod(m_values[index], nullptr);
+  return StrToDouble(m_values[index]);
 }
 
 template <>
-double Argument::As<double>() const {
-  return As<double>(0);
+std::vector<double> Argument::AsVector<double>() const {
+  std::vector<double> values;
+  std::transform(m_values.cbegin(), m_values.cend(), std::back_inserter(values),
+                 StrToDouble);
+  return values;
 }
 
 void ArgumentMap::Add(const std::string& name, const Argument& arg) {
   m_map.emplace(name, arg);
+}
+
+bool ArgumentMap::Has(const std::string& name) const {
+  return m_map.contains(name);
 }
 
 ArgumentParser::ArgumentParser(const std::string& program_name,
