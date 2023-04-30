@@ -101,10 +101,11 @@ class ArgumentMap final {
 class ArgumentParser final {
  public:
   ArgumentParser() = default;
-  ArgumentParser(const std::string& program_name,
-                 const std::string& description = "");
+  ArgumentParser(const std::string& description);
 
   void GenerateHelp(std::initializer_list<std::string> flags);
+
+  void IgnoreFirstArgument(bool ignore = true);
 
   Positional& AddPositional(const std::string& name);
   Optional& AddOptional(std::initializer_list<std::string> flags);
@@ -115,9 +116,9 @@ class ArgumentParser final {
   const ArgumentMap Parse(std::span<const std::string> args);
 
  private:
-  std::string m_program_name;
   std::string m_program_description;
   std::unordered_set<std::string> m_help_flags;
+  bool m_ignore_first_argument = false;
 
   std::list<Positional> m_positionals;
   std::list<Optional> m_optionals;

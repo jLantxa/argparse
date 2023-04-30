@@ -15,6 +15,22 @@ namespace env {
 
 }  // namespace env
 
+static bool IsValidFlagName(const std::string& flag) {
+  // TODO: Check that flag contains no whitespace
+  return (!flag.empty() && flag.starts_with("-"));
+}
+
+static bool IsNumber(const std::string& str) {
+  char* pEnd;
+  std::strtod(str.c_str(), &pEnd);
+
+  return (pEnd == nullptr);
+}
+
+static bool IsOption(const std::string& str) {
+  return (str.starts_with("-") && !IsNumber(str));
+}
+
 Positional::Positional(const std::string& _name)
     : name(_name), nargs(NArgs::NUMERIC), num_args(1) {
   if (name.empty()) {
@@ -59,11 +75,6 @@ Positional& Positional::Help(const std::string& help_str) {
 
 std::pair<NArgs, std::size_t> Positional::GetNArgs() const {
   return {nargs, num_args};
-}
-
-static bool IsValidFlagName(const std::string& flag) {
-  // TODO: Check that flag contains no whitespace
-  return (!flag.empty() && flag.starts_with("-"));
 }
 
 Optional::Optional(std::initializer_list<std::string> flag_list)
@@ -230,14 +241,17 @@ const Argument& ArgumentMap::operator[](const std::string& name) const {
   return it->second;
 }
 
-ArgumentParser::ArgumentParser(const std::string& program_name,
-                               const std::string& description)
-    : m_program_name(program_name), m_program_description(description) {}
+ArgumentParser::ArgumentParser(const std::string& description)
+    : m_program_description(description) {}
 
 void ArgumentParser::GenerateHelp(std::initializer_list<std::string> flags) {
   for (const auto& flag : flags) {
     m_help_flags.insert(flag);
   }
+}
+
+void ArgumentParser::IgnoreFirstArgument(bool ignore) {
+  m_ignore_first_argument = ignore;
 }
 
 Positional& ArgumentParser::AddPositional(const std::string& name) {
@@ -281,19 +295,9 @@ const ArgumentMap ArgumentParser::Parse(std::span<const char*> args) {
   return Parse(str_args);
 }
 
-static bool IsNumber(const std::string& str) {
-  char* pEnd;
-  std::strtod(str.c_str(), &pEnd);
-
-  return (pEnd == nullptr);
-}
-
-static bool IsOption(const std::string& str) {
-  return (str.starts_with("-") && !IsNumber(str));
-}
-
-const ArgumentMap ArgumentParser::Parse(std::span<const std::string> args) {
-  ArgumentMap map;
+const ArgumentMap ArgumentParser::Parse(std::span<const std::string> in_args) {
+  const std::size_t first_argument = m_ignore_first_argument ? 1 : 0;
+  const auto args = in_args.subspan(first_argument);
 
   const std::size_t args_size = args.size();
   std::size_t num_positionals = 0;
@@ -310,6 +314,7 @@ const ArgumentMap ArgumentParser::Parse(std::span<const std::string> args) {
 
   ValidateRequiredOptionals(optionals);
 
+  ArgumentMap map;
   ParsePositionals(positionals, map);
   ParseOptionals(optionals, map);
 
