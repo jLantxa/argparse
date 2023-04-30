@@ -126,6 +126,51 @@ TEST(OptionalArgument, builder) {
   EXPECT_FALSE(opt2.HasFlag("--something"));
 }
 
+TEST(Argument, AsString) {
+  const char* args[] = {"first", "second"};
+  argparse::Argument arg(args);
+  EXPECT_EQ(arg.Size(), 2);
+  EXPECT_EQ(arg.As<std::string>(), "first");
+  EXPECT_EQ(arg.As<std::string>(0), "first");
+  EXPECT_EQ(arg.As<std::string>(1), "second");
+}
+
+TEST(Argument, AsInt) {
+  const char* args[] = {"1", "-1"};
+  argparse::Argument arg(args);
+  EXPECT_EQ(arg.Size(), 2);
+  EXPECT_EQ(arg.As<int>(), 1);
+  EXPECT_EQ(arg.As<int>(0), 1);
+  EXPECT_EQ(arg.As<int>(1), -1);
+}
+
+TEST(Argument, AsLong) {
+  const char* args[] = {"13", "-13"};
+  argparse::Argument arg(args);
+  EXPECT_EQ(arg.Size(), 2);
+  EXPECT_EQ(arg.As<long>(), 13l);
+  EXPECT_EQ(arg.As<long>(0), 13l);
+  EXPECT_EQ(arg.As<long>(1), -13l);
+}
+
+TEST(Argument, AsFloat) {
+  std::string args[] = {std::to_string(3.14), std::to_string(0.4)};
+  argparse::Argument arg(args);
+  EXPECT_EQ(arg.Size(), 2);
+  EXPECT_EQ(arg.As<float>(), 3.14f);
+  EXPECT_EQ(arg.As<float>(0), 3.14f);
+  EXPECT_EQ(arg.As<float>(1), 0.4f);
+}
+
+TEST(Argument, AsDouble) {
+  std::string args[] = {std::to_string(3.14), std::to_string(0.4)};
+  argparse::Argument arg(args);
+  EXPECT_EQ(arg.Size(), 2);
+  EXPECT_EQ(arg.As<double>(), 3.14);
+  EXPECT_EQ(arg.As<double>(0), 3.14);
+  EXPECT_EQ(arg.As<double>(1), 0.4);
+}
+
 TEST(ArgumentParser, create_parser_with_arguments) {
   argparse::ArgumentParser parser;
   EXPECT_NO_THROW(

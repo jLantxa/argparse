@@ -48,7 +48,6 @@ std::pair<NArgs, std::size_t> Positional::GetNArgs() const {
   return {nargs, num_args};
 }
 
-
 static bool IsValidFlagName(const std::string& flag) {
   // TODO: Check that flag contains no whitespace
   return (!flag.empty() && flag.starts_with("-"));
@@ -103,6 +102,69 @@ bool Optional::HasFlag(const std::string& flag) const {
   return has_flag;
 }
 
+Argument::Argument(std::span<const char*> values) {
+  std::copy(values.begin(), values.end(), std::back_inserter(m_values));
+}
+
+Argument::Argument(std::span<const std::string> values) {
+  std::copy(values.begin(), values.end(), std::back_inserter(m_values));
+}
+
+std::size_t Argument::Size() const { return m_values.size(); }
+
+template <>
+std::string Argument::As<std::string>(std::size_t index) const {
+  return m_values[index];
+}
+
+template <>
+std::string Argument::As<std::string>() const {
+  return As<std::string>(0);
+}
+
+template <>
+int Argument::As<int>(std::size_t index) const {
+  return std::stoi(m_values[index], nullptr);
+}
+
+template <>
+int Argument::As<int>() const {
+  return As<int>(0);
+}
+
+template <>
+long Argument::As<long>(std::size_t index) const {
+  return std::stoi(m_values[index], nullptr);
+}
+
+template <>
+long Argument::As<long>() const {
+  return As<long>(0);
+}
+
+template <>
+float Argument::As<float>(std::size_t index) const {
+  return std::stof(m_values[index], nullptr);
+}
+
+template <>
+float Argument::As<float>() const {
+  return As<float>(0);
+}
+
+template <>
+double Argument::As<double>(std::size_t index) const {
+  return std::stod(m_values[index], nullptr);
+}
+
+template <>
+double Argument::As<double>() const {
+  return As<double>(0);
+}
+
+void ArgumentMap::Add(const std::string& name, const Argument& arg) {
+  m_map.emplace(name, arg);
+}
 
 ArgumentParser::ArgumentParser(const std::string& program_name,
                                const std::string& description)
@@ -135,17 +197,35 @@ Optional& ArgumentParser::AddOptional(
   Optional& optional = m_optionals.emplace_back(name, flags);
   m_names.insert(name);
 
-
   for (const auto& flag : flags) {
-    if (m_flags_set.contains(flag)) {
+    if (m_flags_map.contains(flag)) {
       throw std::runtime_error("Flag " + std::string{flag} + " redefined.");
     } else {
-      m_flags_set.insert(flag);
       m_flags_map.emplace(flag, optional);
     }
   }
 
   return optional;
+}
+
+const ArgumentMap ArgumentParser::Parse(int argc, const char* argv[]) {
+  const auto args = env::GetArgs(argc, argv);
+  return Parse(args);
+}
+
+const ArgumentMap ArgumentParser::Parse(std::span<const char*> args) {
+  std::vector<std::string> str_args;
+  std::copy(args.begin(), args.end(), std::back_inserter(str_args));
+  return Parse(str_args);
+}
+
+const ArgumentMap ArgumentParser::Parse(std::span<const std::string> args) {
+  ArgumentMap map;
+
+  // TODO: Parse!
+  (void)args;
+
+  return map;
 }
 
 }  // namespace argparse

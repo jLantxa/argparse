@@ -60,8 +60,28 @@ struct Optional final {
   bool HasFlag(const std::string& flag) const;
 };
 
-class ArgumentMap final {
+class Argument final {
+ public:
+  Argument(std::span<const char*> values);
+  Argument(std::span<const std::string> values);
 
+  std::size_t Size() const;
+
+  template <typename T>
+  T As() const;
+  template <typename T>
+  T As(std::size_t index) const;
+
+ private:
+  std::vector<std::string> m_values;
+};
+
+class ArgumentMap final {
+ public:
+  void Add(const std::string& name, const Argument& arg);
+
+ private:
+  std::unordered_map<std::string, Argument> m_map;
 };
 
 class ArgumentParser final {
@@ -78,6 +98,8 @@ class ArgumentParser final {
   Optional& AddOptional(const std::string& name, const std::string& flag);
 
   const ArgumentMap Parse(int argc, const char* argv[]);
+  const ArgumentMap Parse(std::span<const char*> args);
+  const ArgumentMap Parse(std::span<const std::string> args);
 
  private:
   std::string m_program_name;
@@ -89,7 +111,6 @@ class ArgumentParser final {
   std::unordered_set<std::string> m_help_flags;
 
   std::unordered_set<std::string> m_names;
-  std::unordered_set<std::string> m_flags_set;
   std::unordered_map<std::string, Optional&> m_flags_map;
 };
 
