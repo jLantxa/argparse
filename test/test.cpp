@@ -211,7 +211,7 @@ TEST(ArgumentParser, Optionals) {
 TEST(ArgumentParser, optionals_required) {
   argparse::ArgumentParser parser;
   parser.AddOptional("--not-required");
-  parser.AddOptional("--required").NumArgs(1).Required(1);
+  parser.AddOptional({"-r", "--required"}).NumArgs(1).Required(1);
 
   const std::string in_args0[]{"--not-required", "--required", "3.14"};
   const auto args0 = parser.Parse(in_args0);
@@ -226,4 +226,9 @@ TEST(ArgumentParser, optionals_required) {
   const auto args2 = parser.Parse(in_args2);
   EXPECT_FALSE(args2.Contains("--not-required"));  // Not present, not required
   EXPECT_EQ(args2["--required"].As<float>(), 3.14f);
+
+  const std::string in_args3[]{"-r", "3.14"};
+  const auto args3 = parser.Parse(in_args3);
+  EXPECT_FALSE(args3.Contains("--not-required"));  // Not present, not required
+  EXPECT_EQ(args3["-r"].As<float>(), 3.14f);
 }

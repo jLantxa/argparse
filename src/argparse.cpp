@@ -299,26 +299,34 @@ void ArgumentParser::ValidateRequiredOptionals(
       continue;
     }
 
+    bool found_required = false;
     for (const auto& flag : optional.flags) {
       const auto it = std::find(args.begin(), args.end(), flag);
-      if (it == args.end()) {
-        std::stringstream ss;
-        ss << "Option ";
-        if (optional.flags.size() == 1) {
-          ss << optional.flags[0];
-        } else {
-          ss << "{";
-          const std::size_t num_flags = optional.flags.size();
-          for (std::size_t i = 0; i < (num_flags - 1); ++i) {
-            ss << optional.flags[i] << ", ";
-          }
-          ss << optional.flags.back() << "}";
-        }
-        ss << " is required.";
-
-        throw std::runtime_error(ss.str());
+      if (it != args.end()) {
+        found_required = true;
+        break;
       }
     }
+
+    if (found_required) {
+      continue;
+    }
+
+    std::stringstream ss;
+    ss << "Option ";
+    if (optional.flags.size() == 1) {
+      ss << optional.flags[0];
+    } else {
+      ss << "{";
+      const std::size_t num_flags = optional.flags.size();
+      for (std::size_t i = 0; i < (num_flags - 1); ++i) {
+        ss << optional.flags[i] << ", ";
+      }
+      ss << optional.flags.back() << "}";
+    }
+    ss << " is required.";
+
+    throw std::runtime_error(ss.str());
   }
 }
 
