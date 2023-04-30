@@ -89,7 +89,8 @@ class ArgumentMap final {
  public:
   void Add(const std::string& name, const Argument& arg);
 
-  [[nodiscard]] bool Has(const std::string& name) const;
+  [[nodiscard]] bool Contains(const std::string& name) const;
+  [[nodiscard]] const Argument& operator[](const std::string& name) const;
 
  private:
   std::unordered_map<std::string, Argument> m_map;
@@ -121,6 +122,16 @@ class ArgumentParser final {
 
   std::unordered_set<std::string> m_positional_names;
   std::unordered_map<std::string, Optional&> m_flags_map;
+
+  void ValidateRequiredOptionals(std::span<const std::string> args) const;
+
+  void ParsePositionals(std::span<const std::string> args,
+                        ArgumentMap& map) const;
+  void ParseOptionals(std::span<const std::string> args,
+                      ArgumentMap& map) const;
+
+  std::size_t TryMatchOptional(std::span<const std::string> args,
+                               ArgumentMap& map) const;
 };
 
 }  // namespace argparse

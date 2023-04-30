@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <sstream>
 
 namespace argparse {
 
@@ -192,8 +193,17 @@ void ArgumentMap::Add(const std::string& name, const Argument& arg) {
   m_map.emplace(name, arg);
 }
 
-bool ArgumentMap::Has(const std::string& name) const {
+bool ArgumentMap::Contains(const std::string& name) const {
   return m_map.contains(name);
+}
+
+const Argument& ArgumentMap::operator[](const std::string& name) const {
+  const auto it = m_map.find(name);
+  if (it == m_map.end()) {
+    throw std::runtime_error("Undefined argument " + std::string{name} + ".");
+  }
+
+  return it->second;
 }
 
 ArgumentParser::ArgumentParser(const std::string& program_name,
@@ -247,13 +257,166 @@ const ArgumentMap ArgumentParser::Parse(std::span<const char*> args) {
   return Parse(str_args);
 }
 
+static bool IsNumber(const std::string& str) {
+  char* pEnd;
+  std::strtod(str.c_str(), &pEnd);
+
+  return (pEnd == nullptr);
+}
+
+static bool IsOption(const std::string& str) {
+  return (str.starts_with("-") && !IsNumber(str));
+}
+
 const ArgumentMap ArgumentParser::Parse(std::span<const std::string> args) {
   ArgumentMap map;
 
-  // TODO: Parse!
-  (void)args;
+  const std::size_t args_size = args.size();
+  std::size_t num_positionals = 0;
+  for (std::size_t i = 0; i < args_size; ++i) {
+    if (IsOption(args[i])) {
+      break;
+    }
+    ++num_positionals;
+  }
+
+  const std::span<const std::string> positionals =
+      args.subspan(0, num_positionals);
+  const std::span<const std::string> optionals = args.subspan(num_positionals);
+
+  ValidateRequiredOptionals(optionals);
+
+  ParsePositionals(positionals, map);
+  ParseOptionals(optionals, map);
 
   return map;
+}
+
+void ArgumentParser::ValidateRequiredOptionals(
+    std::span<const std::string> args) const {
+  for (const auto& optional : m_optionals) {
+    if (optional.required == false) {
+      continue;
+    }
+
+    for (const auto& flag : optional.flags) {
+      const auto it = std::find(args.begin(), args.end(), flag);
+      if (it == args.end()) {
+        std::stringstream ss;
+        ss << "Option ";
+        if (optional.flags.size() == 1) {
+          ss << optional.flags[0];
+        } else {
+          ss << "{";
+          const std::size_t num_flags = optional.flags.size();
+          for (std::size_t i = 0; i < (num_flags - 1); ++i) {
+            ss << optional.flags[i] << ", ";
+          }
+          ss << optional.flags.back() << "}";
+        }
+        ss << " is required.";
+
+        throw std::runtime_error(ss.str());
+      }
+    }
+  }
+}
+
+void ArgumentParser::ParsePositionals(std::span<const std::string> args,
+                                      [[maybe_unused]] ArgumentMap& map) const {
+  if (args.size() == 0) {
+    return;
+  }
+}
+
+void ArgumentParser::ParseOptionals(std::span<const std::string> args,
+                                    ArgumentMap& map) const {
+  if (args.size() == 0) {
+    return;
+  }
+
+  std::size_t current_index = 0;
+  const std::size_t args_size = args.size();
+  while (current_index < args_size) {
+    const auto subspan = args.subspan(current_index);
+    current_index += TryMatchOptional(subspan, map);
+  }
+}
+
+std::size_t ArgumentParser::TryMatchOptional(std::span<const std::string> args,
+                                             ArgumentMap& map) const {
+  const std::string& token = args[0];
+
+  if (!IsOption(token)) {
+    return 1;
+  }
+
+  const auto optional_it = m_flags_map.find(token);
+  const bool token_not_found = (optional_it == m_flags_map.end());
+  if (token_not_found) {
+    throw std::runtime_error("Undefined option " + std::string{token} + ".");
+  }
+
+  // Find index of next option
+  const std::size_t args_size = args.size();
+  std::size_t num_option_values = 0;
+  for (std::size_t i = 1; i < args_size; ++i) {
+    if (IsOption(args[i])) {
+      break;
+    }
+    ++num_option_values;
+  }
+
+  const Optional& optional = optional_it->second;
+  const std::span<const std::string> option_values =
+      args.subspan(1, num_option_values);
+  switch (optional.nargs) {
+    // N
+    case NArgs::NUMERIC: {
+      if (num_option_values != optional.num_args) {
+        throw std::runtime_error("Option " + std::string{token} + " expected " +
+                                 std::to_string(optional.num_args) +
+                                 " arguments but found " +
+                                 std::to_string(num_option_values) + ".");
+      }
+      break;
+    }
+
+    // ?
+    case NArgs::OPTIONAL: {
+      if (num_option_values > 1) {
+        throw std::runtime_error("Option " + std::string{token} +
+                                 " expected zero or one arguments but found " +
+                                 std::to_string(num_option_values) + ".");
+      }
+      break;
+    }
+
+    // *
+    case NArgs::ZERO_OR_MORE: {
+      // Everything
+      break;
+    }
+
+    // +
+    case NArgs::ONE_OR_MORE: {
+      if (num_option_values < 1) {
+        throw std::runtime_error(
+            "Option " + std::string{token} +
+            " expected one or more arguments but found 0.");
+      }
+      break;
+    }
+
+    default:
+      throw std::runtime_error(
+          "Unknown number of required optional arguments for " +
+          std::string{token} + ".");
+  }
+
+  map.Add(token, option_values);
+
+  return (num_option_values + 1);
 }
 
 }  // namespace argparse

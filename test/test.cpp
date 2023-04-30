@@ -188,3 +188,42 @@ TEST(ArgumentParser, redefined_flags_throw) {
                    "Same flag with under different argument name"),
                std::runtime_error);
 }
+
+TEST(ArgumentParser, Optionals) {
+  argparse::ArgumentParser parser;
+  parser.AddOptional("-a").NumArgs(3);
+  parser.AddOptional("--option").NumArgs(argparse::NArgs::ONE_OR_MORE);
+  parser.AddOptional("-b");
+  parser.AddOptional("--required").NumArgs(1).Required(1);
+
+  const std::string in_args[]{"-a",  "1",   "2",  "3",          "--option",
+                              "one", "two", "-b", "--required", "3.14"};
+  const auto args = parser.Parse(in_args);
+
+  EXPECT_THAT(args["-a"].AsVector<int>(),
+              ::testing::ElementsAreArray({1, 2, 3}));
+  EXPECT_THAT(args["--option"].AsVector<std::string>(),
+              ::testing::ElementsAreArray({"one", "two"}));
+  EXPECT_TRUE(args.Contains("-b"));
+  EXPECT_EQ(args["--required"].As<float>(), 3.14f);
+}
+
+TEST(ArgumentParser, optionals_required) {
+  argparse::ArgumentParser parser;
+  parser.AddOptional("--not-required");
+  parser.AddOptional("--required").NumArgs(1).Required(1);
+
+  const std::string in_args0[]{"--not-required", "--required", "3.14"};
+  const auto args0 = parser.Parse(in_args0);
+  EXPECT_TRUE(args0.Contains("--not-required"));
+  EXPECT_EQ(args0["--required"].As<float>(), 3.14f);
+
+  const std::string in_args1[]{"--not-required"};
+  EXPECT_THROW(parser.Parse(in_args1),
+               std::runtime_error);  // Required not present
+
+  const std::string in_args2[]{"--required", "3.14"};
+  const auto args2 = parser.Parse(in_args2);
+  EXPECT_FALSE(args2.Contains("--not-required"));  // Not present, not required
+  EXPECT_EQ(args2["--required"].As<float>(), 3.14f);
+}
