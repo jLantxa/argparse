@@ -42,14 +42,14 @@ struct Positional {
 };
 
 struct Optional final {
-  std::string name;
   std::vector<std::string> flags;
   bool required = false;
   NArgs nargs = NArgs::OPTIONAL;  // Numeric or special
   std::size_t num_args = 0;       // Number if NArgs is numeric
   std::string help;
 
-  Optional(const std::string& name, std::initializer_list<std::string> flags);
+  Optional(std::initializer_list<std::string> flags);
+  Optional(const std::string& flag);
 
   Optional& NumArgs(std::size_t num);
   Optional& NumArgs(NArgs num);
@@ -104,9 +104,8 @@ class ArgumentParser final {
   void GenerateHelp(std::initializer_list<std::string> flags);
 
   Positional& AddPositional(const std::string& name);
-  Optional& AddOptional(const std::string& name,
-                        std::initializer_list<std::string> flags);
-  Optional& AddOptional(const std::string& name, const std::string& flag);
+  Optional& AddOptional(std::initializer_list<std::string> flags);
+  Optional& AddOptional(const std::string& flag);
 
   const ArgumentMap Parse(int argc, const char* argv[]);
   const ArgumentMap Parse(std::span<const char*> args);
@@ -115,13 +114,12 @@ class ArgumentParser final {
  private:
   std::string m_program_name;
   std::string m_program_description;
+  std::unordered_set<std::string> m_help_flags;
 
   std::list<Positional> m_positionals;
   std::list<Optional> m_optionals;
 
-  std::unordered_set<std::string> m_help_flags;
-
-  std::unordered_set<std::string> m_names;
+  std::unordered_set<std::string> m_positional_names;
   std::unordered_map<std::string, Optional&> m_flags_map;
 };
 

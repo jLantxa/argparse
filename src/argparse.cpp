@@ -53,13 +53,8 @@ static bool IsValidFlagName(const std::string& flag) {
   return (!flag.empty() && flag.starts_with("-"));
 }
 
-Optional::Optional(const std::string& _name,
-                   std::initializer_list<std::string> flag_list)
-    : name(_name), required(false), nargs(NArgs::OPTIONAL), num_args(0) {
-  if (_name.empty()) {
-    throw std::runtime_error("Arguments cannot have an empty name.");
-  }
-
+Optional::Optional(std::initializer_list<std::string> flag_list)
+    : required(false), nargs(NArgs::OPTIONAL), num_args(0) {
   for (const auto& flag : flag_list) {
     if (!IsValidFlagName(flag)) {
       throw std::runtime_error(
@@ -69,6 +64,9 @@ Optional::Optional(const std::string& _name,
     flags.push_back(flag);
   }
 }
+
+Optional::Optional(const std::string& flag)
+    : Optional(std::initializer_list<std::string>{flag}) {}
 
 Optional& Optional::NumArgs(std::size_t num) {
   nargs = NArgs::NUMERIC;
@@ -209,25 +207,19 @@ void ArgumentParser::GenerateHelp(std::initializer_list<std::string> flags) {
 }
 
 Positional& ArgumentParser::AddPositional(const std::string& name) {
-  if (m_names.contains(name)) {
+  if (m_positional_names.contains(name)) {
     throw std::runtime_error("Argument name " + std::string{name} +
                              " redefined.");
   }
-  m_names.insert(name);
+  m_positional_names.insert(name);
 
   Positional& positional = m_positionals.emplace_back(name);
   return positional;
 }
 
 Optional& ArgumentParser::AddOptional(
-    const std::string& name, std::initializer_list<std::string> flags) {
-  if (m_names.contains(name)) {
-    throw std::runtime_error("Argument name " + std::string{name} +
-                             " redefined.");
-  }
-
-  Optional& optional = m_optionals.emplace_back(name, flags);
-  m_names.insert(name);
+    std::initializer_list<std::string> flags) {
+  Optional& optional = m_optionals.emplace_back(flags);
 
   for (const auto& flag : flags) {
     if (m_flags_map.contains(flag)) {
@@ -238,6 +230,10 @@ Optional& ArgumentParser::AddOptional(
   }
 
   return optional;
+}
+
+Optional& ArgumentParser::AddOptional(const std::string& flag) {
+  return AddOptional(std::initializer_list<std::string>{flag});
 }
 
 const ArgumentMap ArgumentParser::Parse(int argc, const char* argv[]) {
