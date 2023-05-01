@@ -451,7 +451,12 @@ std::size_t ArgumentParser::TryMatchOptional(std::span<const std::string> args,
           std::string{token} + ".");
   }
 
-  map.Add(token, option_values);
+  /* TODO: Implement a second map for optional flags to avoid duplicating
+   * arguments in the map.
+   */
+  for (const auto& flag : optional.flags) {
+    map.Add(flag, option_values);
+  }
 
   return (num_option_values + 1);
 }
