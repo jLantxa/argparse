@@ -225,7 +225,7 @@ std::vector<double> Argument::AsVector<double>() const {
 }
 
 void ArgumentMap::Add(const std::string& name, const Argument& arg) {
-  m_map.emplace(name, arg);
+  m_map.insert_or_assign(name, arg);
 }
 
 bool ArgumentMap::Contains(const std::string& name) const {
