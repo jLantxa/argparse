@@ -194,7 +194,7 @@ TEST(ArgumentParser, Optionals) {
   parser.AddOptional("-a").NumArgs(3);
   parser.AddOptional("--option").NumArgs(argparse::NArgs::ONE_OR_MORE);
   parser.AddOptional("-b");
-  parser.AddOptional("--required").NumArgs(1).Required(1);
+  parser.AddOptional("--required").NumArgs(1).Required(true);
 
   const std::string in_args[]{"-a",  "1",   "2",  "3",          "--option",
                               "one", "two", "-b", "--required", "3.14"};
@@ -211,7 +211,7 @@ TEST(ArgumentParser, Optionals) {
 TEST(ArgumentParser, optionals_required) {
   argparse::ArgumentParser parser;
   parser.AddOptional("--not-required");
-  parser.AddOptional({"-r", "--required"}).NumArgs(1).Required(1);
+  parser.AddOptional({"-r", "--required"}).NumArgs(1).Required(true);
 
   const std::string in_args0[]{"--not-required", "--required", "3.14"};
   const auto args0 = parser.Parse(in_args0);
@@ -280,4 +280,38 @@ TEST(ArgumentParser, Positionals) {
   const auto args11 = parser1.Parse(std::vector<std::string>{"0", "1"});
   EXPECT_THAT(args11["pos0"].AsVector<std::string>(),
               ::testing::ElementsAreArray({"0", "1"}));
+}
+
+TEST(ArgumentParser, positionals_and_optionals) {
+  argparse::ArgumentParser parser;
+  parser.AddPositional("pos0");
+  parser.AddPositional("pos1").NumArgs(2);
+  parser.AddPositional("pos2").NumArgs("?");
+  parser.AddPositional("pos3").NumArgs("+");
+  parser.AddPositional("pos4").NumArgs(1);
+  parser.AddOptional("-a").NumArgs(3);
+  parser.AddOptional("--option").NumArgs(argparse::NArgs::ONE_OR_MORE);
+  parser.AddOptional("-b");
+  parser.AddOptional("--required").NumArgs(1).Required(true);
+
+  const auto args = parser.Parse(std::vector<std::string>{
+      "0", "11", "12", "?", "31", "32", "33", "4", "-a", "1", "2", "3",
+      "--option", "one", "two", "-b", "--required", "3.14"});
+
+  EXPECT_THAT(args["pos0"].AsVector<std::string>(),
+              ::testing::ElementsAreArray({"0"}));
+  EXPECT_THAT(args["pos1"].AsVector<std::string>(),
+              ::testing::ElementsAreArray({"11", "12"}));
+  EXPECT_THAT(args["pos2"].AsVector<std::string>(),
+              ::testing::ElementsAreArray({"?"}));
+  EXPECT_THAT(args["pos3"].AsVector<std::string>(),
+              ::testing::ElementsAreArray({"31", "32", "33"}));
+  EXPECT_THAT(args["pos4"].AsVector<std::string>(),
+              ::testing::ElementsAreArray({"4"}));
+  EXPECT_THAT(args["-a"].AsVector<int>(),
+              ::testing::ElementsAreArray({1, 2, 3}));
+  EXPECT_THAT(args["--option"].AsVector<std::string>(),
+              ::testing::ElementsAreArray({"one", "two"}));
+  EXPECT_TRUE(args.Contains("-b"));
+  EXPECT_EQ(args["--required"].As<float>(), 3.14f);
 }
