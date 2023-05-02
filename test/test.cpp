@@ -196,9 +196,8 @@ TEST(ArgumentParser, Optionals) {
   parser.AddOptional("-b");
   parser.AddOptional("--required").NumArgs(1).Required(1);
 
-  const std::string in_args[]{"pos0", "pos1", "-a",         "1",
-                              "2",    "3",    "--option",   "one",
-                              "two",  "-b",   "--required", "3.14"};
+  const std::string in_args[]{"-a",  "1",   "2",  "3",          "--option",
+                              "one", "two", "-b", "--required", "3.14"};
   const auto args = parser.Parse(in_args);
 
   EXPECT_THAT(args["-a"].AsVector<int>(),
@@ -214,16 +213,16 @@ TEST(ArgumentParser, optionals_required) {
   parser.AddOptional("--not-required");
   parser.AddOptional({"-r", "--required"}).NumArgs(1).Required(1);
 
-  const std::string in_args0[]{"pos0", "--not-required", "--required", "3.14"};
+  const std::string in_args0[]{"--not-required", "--required", "3.14"};
   const auto args0 = parser.Parse(in_args0);
   EXPECT_TRUE(args0.Contains("--not-required"));
   EXPECT_EQ(args0["--required"].As<float>(), 3.14f);
 
-  const std::string in_args1[]{"pos0", "pos1", "pos2", "--not-required"};
+  const std::string in_args1[]{"--not-required"};
   EXPECT_THROW(parser.Parse(in_args1),
                std::runtime_error);  // Required not present
 
-  const std::string in_args2[]{"pos0", "pos1", "--required", "3.14"};
+  const std::string in_args2[]{"--required", "3.14"};
   const auto args2 = parser.Parse(in_args2);
   EXPECT_FALSE(args2.Contains("--not-required"));  // Not present, not required
   EXPECT_EQ(args2["--required"].As<float>(), 3.14f);
@@ -238,20 +237,41 @@ TEST(ArgumentParser, optional_with_many_flags) {
   argparse::ArgumentParser parser;
   parser.AddOptional({"-a", "-b"}).NumArgs(1);
 
-  const std::string arg_str0[] = {"pos0", "pos1", "-a", "0"};
-  const auto args0 = parser.Parse(arg_str0);
+  const auto args0 = parser.Parse(std::vector<std::string>{"-a", "0"});
   EXPECT_TRUE(args0.Contains("-a"));
   EXPECT_TRUE(args0.Contains("-b"));
 
-  const std::string arg_str1[] = {"-b", "0"};
-  const auto args1 = parser.Parse(arg_str1);
+  const auto args1 = parser.Parse(std::vector<std::string>{"-b", "0"});
   EXPECT_TRUE(args1.Contains("-a"));
   EXPECT_TRUE(args1.Contains("-b"));
 
-  const std::string arg_str2[] = {"-a", "0", "-b", "1"};
-  const auto args2 = parser.Parse(arg_str2);
+  const auto args2 =
+      parser.Parse(std::vector<std::string>{"-a", "0", "-b", "1"});
   EXPECT_TRUE(args2.Contains("-a"));
   EXPECT_TRUE(args2.Contains("-b"));
   EXPECT_EQ(args2["-a"].As<int>(), 1);  // Argument values get overwriten
   EXPECT_EQ(args2["-b"].As<int>(), 1);
+}
+
+TEST(ArgumentParser, Positionals) {
+  argparse::ArgumentParser parser0;
+  parser0.AddPositional("pos0");
+  parser0.AddPositional("pos1").NumArgs(2);
+  parser0.AddPositional("pos2").NumArgs("+");
+  const auto args0 = parser0.Parse(
+      std::vector<std::string>{"0", "11", "12", "21", "22", "23"});
+  EXPECT_THAT(args0["pos0"].AsVector<std::string>(),
+              ::testing::ElementsAreArray({"0"}));
+  EXPECT_THAT(args0["pos1"].AsVector<std::string>(),
+              ::testing::ElementsAreArray({"11", "12"}));
+  EXPECT_THAT(args0["pos2"].AsVector<std::string>(),
+              ::testing::ElementsAreArray({"21", "22", "23"}));
+
+  argparse::ArgumentParser parser1;
+  parser1.AddPositional("pos0").NumArgs("*");
+  const auto args10 = parser1.Parse(std::vector<std::string>{});
+  EXPECT_EQ(args10["pos0"].Size(), 0);
+  const auto args11 = parser1.Parse(std::vector<std::string>{"0", "1"});
+  EXPECT_THAT(args11["pos0"].AsVector<std::string>(),
+              ::testing::ElementsAreArray({"0", "1"}));
 }

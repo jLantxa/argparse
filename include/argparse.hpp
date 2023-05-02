@@ -130,6 +130,11 @@ class ArgumentParser final {
 
   void ParsePositionals(std::span<const std::string> args,
                         ArgumentMap& map) const;
+
+  std::size_t GetMinNumberOfArguments(
+      std::list<Positional>::const_iterator begin,
+      std::list<Positional>::const_iterator end) const;
+
   void ParseOptionals(std::span<const std::string> args,
                       ArgumentMap& map) const;
 

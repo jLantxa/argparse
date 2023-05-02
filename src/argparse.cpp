@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cstdlib>
-#include <iostream>
 #include <sstream>
 
 namespace argparse {
@@ -61,7 +60,7 @@ Positional& Positional::NumArgs(const std::string& num) {
   if (num == "?") {
     return NumArgs(NArgs::OPTIONAL);
   } else if (num == "*") {
-    return NumArgs(NArgs::OPTIONAL);
+    return NumArgs(NArgs::ZERO_OR_MORE);
   } else if (num == "+") {
     return NumArgs(NArgs::ONE_OR_MORE);
   }
@@ -360,9 +359,86 @@ void ArgumentParser::ValidateRequiredOptionals(
   }
 }
 
-void ArgumentParser::ParsePositionals(
-    [[maybe_unused]] std::span<const std::string> args,
-    [[maybe_unused]] ArgumentMap& map) const {}
+std::size_t ArgumentParser::GetMinNumberOfArguments(
+    std::list<Positional>::const_iterator begin,
+    std::list<Positional>::const_iterator end) const {
+  std::size_t count = 0;
+  for (auto it = begin; it != end; ++it) {
+    const auto [nargs, num_args] = it->GetNArgs();
+    switch (nargs) {
+      case NArgs::NUMERIC:
+        count += num_args;
+        break;
+
+      case NArgs::OPTIONAL:
+      case NArgs::ZERO_OR_MORE:
+        break;
+
+      case NArgs::ONE_OR_MORE:
+        ++count;
+        break;
+    }
+  }
+
+  return count;
+}
+
+void ArgumentParser::ParsePositionals(std::span<const std::string> args,
+                                      ArgumentMap& map) const {
+  const std::size_t num_args = args.size();
+  std::size_t current_arg_index = 0;
+
+  for (auto pos_it = m_positionals.begin(); pos_it != m_positionals.end();
+       ++pos_it) {
+    const auto [pos_nargs, pos_num_args] = pos_it->GetNArgs();
+    const std::size_t min_num_other_positionals =
+        GetMinNumberOfArguments(std::next(pos_it), m_positionals.end());
+    const std::size_t num_remaining_args =
+        num_args - current_arg_index - min_num_other_positionals;
+    const auto& name = pos_it->name;
+
+    std::size_t num_matched_args;
+    switch (pos_nargs) {
+      case NArgs::NUMERIC: {
+        if (num_remaining_args < pos_num_args) {
+          throw std::runtime_error("Positional argument " + name +
+                                   " requires " + std::to_string(pos_num_args) +
+                                   " values but found " +
+                                   std::to_string(num_remaining_args) + ".");
+        }
+        num_matched_args = pos_num_args;
+        break;
+      }
+
+      case NArgs::ONE_OR_MORE: {
+        if (num_remaining_args < 1) {
+          throw std::runtime_error(
+              "Positional argument " + name +
+              " requires one or more values but found none.");
+        }
+        num_matched_args = num_remaining_args;
+        break;
+      }
+
+      case NArgs::ZERO_OR_MORE: {
+        num_matched_args = num_remaining_args;
+        break;
+      }
+
+      case NArgs::OPTIONAL: {
+        num_matched_args = (num_remaining_args > 0) ? 1 : 0;
+        break;
+      }
+    }
+    const auto subspan = args.subspan(current_arg_index, num_matched_args);
+    current_arg_index += num_matched_args;
+    map.Add(name, subspan);
+  }
+
+  if (current_arg_index < num_args) {
+    throw std::runtime_error("Unmatched positional arguments.");
+  }
+}
 
 void ArgumentParser::ParseOptionals(std::span<const std::string> args,
                                     ArgumentMap& map) const {
