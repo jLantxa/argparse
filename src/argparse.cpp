@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <iostream>
 #include <sstream>
 
 namespace argparse {
@@ -359,19 +360,12 @@ void ArgumentParser::ValidateRequiredOptionals(
   }
 }
 
-void ArgumentParser::ParsePositionals(std::span<const std::string> args,
-                                      [[maybe_unused]] ArgumentMap& map) const {
-  if (args.size() == 0) {
-    return;
-  }
-}
+void ArgumentParser::ParsePositionals(
+    [[maybe_unused]] std::span<const std::string> args,
+    [[maybe_unused]] ArgumentMap& map) const {}
 
 void ArgumentParser::ParseOptionals(std::span<const std::string> args,
                                     ArgumentMap& map) const {
-  if (args.size() == 0) {
-    return;
-  }
-
   std::size_t current_index = 0;
   const std::size_t args_size = args.size();
   while (current_index < args_size) {
