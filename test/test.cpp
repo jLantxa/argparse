@@ -257,15 +257,21 @@ TEST(ArgumentParser, Positionals) {
   argparse::ArgumentParser parser0;
   parser0.AddPositional("pos0");
   parser0.AddPositional("pos1").NumArgs(2);
-  parser0.AddPositional("pos2").NumArgs("+");
+  parser0.AddPositional("pos2").NumArgs("?");
+  parser0.AddPositional("pos3").NumArgs("+");
+  parser0.AddPositional("pos4").NumArgs(1);
   const auto args0 = parser0.Parse(
-      std::vector<std::string>{"0", "11", "12", "21", "22", "23"});
+      std::vector<std::string>{"0", "11", "12", "?", "31", "32", "33", "4"});
   EXPECT_THAT(args0["pos0"].AsVector<std::string>(),
               ::testing::ElementsAreArray({"0"}));
   EXPECT_THAT(args0["pos1"].AsVector<std::string>(),
               ::testing::ElementsAreArray({"11", "12"}));
   EXPECT_THAT(args0["pos2"].AsVector<std::string>(),
-              ::testing::ElementsAreArray({"21", "22", "23"}));
+              ::testing::ElementsAreArray({"?"}));
+  EXPECT_THAT(args0["pos3"].AsVector<std::string>(),
+              ::testing::ElementsAreArray({"31", "32", "33"}));
+  EXPECT_THAT(args0["pos4"].AsVector<std::string>(),
+              ::testing::ElementsAreArray({"4"}));
 
   argparse::ArgumentParser parser1;
   parser1.AddPositional("pos0").NumArgs("*");
