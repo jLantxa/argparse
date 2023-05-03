@@ -31,6 +31,18 @@ static bool IsOption(const std::string& str) {
   return (str.starts_with("-") && !IsNumber(str));
 }
 
+static NArgs GetNArgsFromString(const std::string& str) {
+  if (str == "?") {
+    return NArgs::OPTIONAL;
+  } else if (str == "*") {
+    return NArgs::ZERO_OR_MORE;
+  } else if (str == "+") {
+    return NArgs::ONE_OR_MORE;
+  }
+
+  throw std::runtime_error(str + " is not a valid number of arguments");
+}
+
 Positional::Positional(const std::string& _name)
     : name(_name), nargs(NArgs::NUMERIC), num_args(1) {
   if (name.empty()) {
@@ -57,15 +69,8 @@ Positional& Positional::NumArgs(NArgs num) {
 }
 
 Positional& Positional::NumArgs(const std::string& num) {
-  if (num == "?") {
-    return NumArgs(NArgs::OPTIONAL);
-  } else if (num == "*") {
-    return NumArgs(NArgs::ZERO_OR_MORE);
-  } else if (num == "+") {
-    return NumArgs(NArgs::ONE_OR_MORE);
-  }
-
-  throw std::runtime_error(num + " is not a valid number of arguments");
+  const NArgs nargs = GetNArgsFromString(num);
+  return NumArgs(nargs);
 }
 
 Positional& Positional::Help(const std::string& help_str) {
@@ -105,15 +110,8 @@ Optional& Optional::NumArgs(NArgs num) {
 }
 
 Optional& Optional::NumArgs(const std::string& num) {
-  if (num == "?") {
-    return NumArgs(NArgs::OPTIONAL);
-  } else if (num == "*") {
-    return NumArgs(NArgs::OPTIONAL);
-  } else if (num == "+") {
-    return NumArgs(NArgs::ONE_OR_MORE);
-  }
-
-  throw std::runtime_error(num + " is not a valid number of arguments");
+  const NArgs nargs = GetNArgsFromString(num);
+  return NumArgs(nargs);
 }
 
 Optional& Optional::Required(bool req) {
