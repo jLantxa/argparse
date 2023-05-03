@@ -103,8 +103,6 @@ class ArgumentParser final {
   ArgumentParser() = default;
   ArgumentParser(const std::string& description);
 
-  void GenerateHelp(std::initializer_list<std::string> flags);
-
   void IgnoreFirstArgument(bool ignore = true);
 
   Positional& AddPositional(const std::string& name);
@@ -117,7 +115,6 @@ class ArgumentParser final {
 
  private:
   std::string m_program_description;
-  std::unordered_set<std::string> m_help_flags;
   bool m_ignore_first_argument = false;
 
   std::list<Positional> m_positionals;

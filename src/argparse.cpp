@@ -242,12 +242,6 @@ const Argument& ArgumentMap::operator[](const std::string& name) const {
 ArgumentParser::ArgumentParser(const std::string& description)
     : m_program_description(description) {}
 
-void ArgumentParser::GenerateHelp(std::initializer_list<std::string> flags) {
-  for (const auto& flag : flags) {
-    m_help_flags.insert(flag);
-  }
-}
-
 void ArgumentParser::IgnoreFirstArgument(bool ignore) {
   m_ignore_first_argument = ignore;
 }
