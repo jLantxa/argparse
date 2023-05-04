@@ -562,8 +562,9 @@ void ArgumentParser::PrintHelp() const {
 
   std::cout << "positional arguments:\n";
   for (const auto& positional : m_positionals) {
-    std::cout << positional.name << " " << PrettyNArgs(positional.GetNArgs())
-              << "\t" << positional.help << "\n";
+    std::cout << " " + positional.name << " "
+              << PrettyNArgs(positional.GetNArgs()) << "\t" << positional.help
+              << "\n";
   }
 
   std::cout << "\n";
