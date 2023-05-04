@@ -84,8 +84,8 @@ TEST(OptionalArgument, builder) {
   argparse::Optional opt0({"-f", "--flag1", "-q"});
   argparse::Optional& opt0_ref = opt0;
   opt0_ref.Help("Optional 0");
-  EXPECT_EQ(opt0.nargs, argparse::NArgs::OPTIONAL);
-  EXPECT_EQ(opt0.num_args, 0);
+  EXPECT_EQ(opt0.nargs, argparse::NArgs::NUMERIC);
+  EXPECT_EQ(opt0.num_args, 1);
   EXPECT_EQ(opt0.help, "Optional 0");
   EXPECT_EQ(opt0.required, false);
   EXPECT_TRUE(opt0.HasFlag("-f"));
@@ -96,8 +96,8 @@ TEST(OptionalArgument, builder) {
   argparse::Optional opt1({"-f"});
   argparse::Optional& opt1_ref = opt1;
   opt1_ref.Required(false).Help("Optional 1");
-  EXPECT_EQ(opt1.nargs, argparse::NArgs::OPTIONAL);
-  EXPECT_EQ(opt1.num_args, 0);
+  EXPECT_EQ(opt1.nargs, argparse::NArgs::NUMERIC);
+  EXPECT_EQ(opt1.num_args, 1);
   EXPECT_EQ(opt1.required, false);
   EXPECT_EQ(opt1.help, "Optional 1");
   EXPECT_TRUE(opt1.HasFlag("-f"));
@@ -193,7 +193,7 @@ TEST(ArgumentParser, Optionals) {
   argparse::ArgumentParser parser;
   parser.AddOptional("-a").NumArgs(3);
   parser.AddOptional("--option").NumArgs(argparse::NArgs::ONE_OR_MORE);
-  parser.AddOptional("-b");
+  parser.AddOptional("-b").NumArgs("?");
   parser.AddOptional("--required").NumArgs(1).Required(true);
 
   const std::string in_args[]{"-a",  "1",   "2",  "3",          "--option",
@@ -210,7 +210,7 @@ TEST(ArgumentParser, Optionals) {
 
 TEST(ArgumentParser, optionals_required) {
   argparse::ArgumentParser parser;
-  parser.AddOptional("--not-required");
+  parser.AddOptional("--not-required").NumArgs("?");
   parser.AddOptional({"-r", "--required"}).NumArgs(1).Required(true);
 
   const std::string in_args0[]{"--not-required", "--required", "3.14"};
@@ -290,8 +290,8 @@ TEST(ArgumentParser, positionals_and_optionals) {
   parser.AddPositional("pos3").NumArgs("+");
   parser.AddPositional("pos4").NumArgs(1);
   parser.AddOptional("-a").NumArgs(3);
-  parser.AddOptional("--option").NumArgs(argparse::NArgs::ONE_OR_MORE);
-  parser.AddOptional("-b");
+  parser.AddOptional({"-o", "--option"}).NumArgs(argparse::NArgs::ONE_OR_MORE);
+  parser.AddOptional("-b").NumArgs("?");
   parser.AddOptional("--required").NumArgs(1).Required(true);
 
   const auto args = parser.Parse(std::vector<std::string>{

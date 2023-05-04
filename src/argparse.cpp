@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <iostream>
 #include <sstream>
 
 namespace argparse {
@@ -43,8 +44,7 @@ static NArgs GetNArgsFromString(const std::string& str) {
   throw std::runtime_error(str + " is not a valid number of arguments");
 }
 
-Positional::Positional(const std::string& _name)
-    : name(_name), nargs(NArgs::NUMERIC), num_args(1) {
+Positional::Positional(const std::string& _name) : name(_name) {
   if (name.empty()) {
     throw std::runtime_error("Arguments cannot have an empty name.");
   } else if (name.starts_with('-')) {
@@ -82,8 +82,7 @@ std::pair<NArgs, std::size_t> Positional::GetNArgs() const {
   return {nargs, num_args};
 }
 
-Optional::Optional(std::initializer_list<std::string> flag_list)
-    : required(false), nargs(NArgs::OPTIONAL), num_args(0) {
+Optional::Optional(std::initializer_list<std::string> flag_list) {
   for (const auto& flag : flag_list) {
     if (!IsValidFlagName(flag)) {
       throw std::runtime_error(
@@ -105,6 +104,11 @@ Optional& Optional::NumArgs(std::size_t num) {
 }
 
 Optional& Optional::NumArgs(NArgs num) {
+  if (required &&
+      ((nargs == NArgs::OPTIONAL) || (nargs == NArgs::ZERO_OR_MORE))) {
+    throw std::runtime_error("An required optional cannot be made required.");
+  }
+
   nargs = num;
   return *this;
 }
@@ -115,6 +119,11 @@ Optional& Optional::NumArgs(const std::string& num) {
 }
 
 Optional& Optional::Required(bool req) {
+  if ((req == true) &&
+      ((nargs == NArgs::OPTIONAL) || nargs == NArgs::ZERO_OR_MORE)) {
+    throw std::runtime_error("An optional argument cannot be made required.");
+  }
+
   required = req;
   return *this;
 }
@@ -521,6 +530,62 @@ std::size_t ArgumentParser::TryMatchOptional(std::span<const std::string> args,
   }
 
   return (num_option_values + 1);
+}
+
+static std::string PrettyNArgs(std::pair<NArgs, std::size_t> nargs) {
+  const auto [nargs_flag, num_args] = nargs;
+
+  switch (nargs_flag) {
+    case NArgs::NUMERIC: {
+      if (num_args > 1) {
+        return "[" + std::to_string(num_args) + "]";
+      } else {
+        return "";
+      }
+    }
+
+    case NArgs::OPTIONAL:
+      return "[?]";
+
+    case NArgs::ZERO_OR_MORE:
+      return "[*]";
+
+    case NArgs::ONE_OR_MORE:
+      return "[+]";
+  }
+}
+
+void ArgumentParser::PrintHelp() const {
+  if (!m_program_description.empty()) {
+    std::cout << m_program_description << "\n\n";
+  }
+
+  std::cout << "positional arguments:\n";
+  for (const auto& positional : m_positionals) {
+    std::cout << positional.name << " " << PrettyNArgs(positional.GetNArgs())
+              << "\t" << positional.help << "\n";
+  }
+
+  std::cout << "\n";
+
+  // TODO: Print NArgs
+  std::cout << "optional arguments:\n";
+  for (const auto& optional : m_optionals) {
+    std::cout << " ";
+    std::stringstream ss;
+
+    const std::size_t num_flags = optional.flags.size();
+    for (std::size_t i = 0; i < (num_flags - 1); ++i) {
+      ss << optional.flags[i] << ", ";
+    }
+    if (num_flags > 0) {
+      ss << optional.flags.back();
+    }
+
+    std::cout << ss.str() << " ";
+    std::cout << PrettyNArgs(optional.GetNArgs());
+    std::cout << " \t" << optional.help << "\n";
+  }
 }
 
 }  // namespace argparse

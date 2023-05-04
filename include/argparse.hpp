@@ -45,8 +45,8 @@ struct Positional {
 struct Optional final {
   std::vector<std::string> flags;
   bool required = false;
-  NArgs nargs = NArgs::OPTIONAL;  // Numeric or special
-  std::size_t num_args = 0;       // Number if NArgs is numeric
+  NArgs nargs = NArgs::NUMERIC;  // Numeric or special
+  std::size_t num_args = 1;      // Number if NArgs is numeric
   std::string help;
 
   Optional(std::initializer_list<std::string> flags);
@@ -112,6 +112,8 @@ class ArgumentParser final {
   const ArgumentMap Parse(int argc, const char* argv[]);
   const ArgumentMap Parse(std::span<const char*> args);
   const ArgumentMap Parse(std::span<const std::string> args);
+
+  void PrintHelp() const;
 
  private:
   std::string m_program_description;
