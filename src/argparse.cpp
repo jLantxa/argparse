@@ -44,6 +44,45 @@ static NArgs GetNArgsFromString(const std::string& str) {
   throw std::runtime_error(str + " is not a valid number of arguments");
 }
 
+static std::string PrettyNArgs(std::pair<NArgs, std::size_t> nargs) {
+  const auto [nargs_flag, num_args] = nargs;
+
+  switch (nargs_flag) {
+    case NArgs::NUMERIC: {
+      if (num_args > 1) {
+        return "[" + std::to_string(num_args) + "]";
+      } else {
+        return "";
+      }
+    }
+
+    case NArgs::OPTIONAL:
+      return "[?]";
+
+    case NArgs::ZERO_OR_MORE:
+      return "[*]";
+
+    case NArgs::ONE_OR_MORE:
+      return "[+]";
+  }
+}
+
+static constexpr auto StrToInt = [](const std::string& str) -> int {
+  return std::stoi(str, nullptr);
+};
+
+static constexpr auto StrToLong = [](const std::string& str) -> long {
+  return std::stol(str, nullptr);
+};
+
+static constexpr auto StrToFloat = [](const std::string& str) -> float {
+  return std::stof(str, nullptr);
+};
+
+static constexpr auto StrToDouble = [](const std::string& str) -> double {
+  return std::stod(str, nullptr);
+};
+
 Positional::Positional(const std::string& _name) : name(_name) {
   if (name.empty()) {
     throw std::runtime_error("Arguments cannot have an empty name.");
@@ -142,22 +181,6 @@ bool Optional::HasFlag(const std::string& flag) const {
       (std::find(flags.cbegin(), flags.cend(), flag) != flags.cend());
   return has_flag;
 }
-
-static constexpr auto StrToInt = [](const std::string& str) -> int {
-  return std::stoi(str, nullptr);
-};
-
-static constexpr auto StrToLong = [](const std::string& str) -> long {
-  return std::stol(str, nullptr);
-};
-
-static constexpr auto StrToFloat = [](const std::string& str) -> float {
-  return std::stof(str, nullptr);
-};
-
-static constexpr auto StrToDouble = [](const std::string& str) -> double {
-  return std::stod(str, nullptr);
-};
 
 Argument::Argument(std::span<const char*> values) {
   std::copy(values.begin(), values.end(), std::back_inserter(m_values));
@@ -530,29 +553,6 @@ std::size_t ArgumentParser::TryMatchOptional(std::span<const std::string> args,
   }
 
   return (num_option_values + 1);
-}
-
-static std::string PrettyNArgs(std::pair<NArgs, std::size_t> nargs) {
-  const auto [nargs_flag, num_args] = nargs;
-
-  switch (nargs_flag) {
-    case NArgs::NUMERIC: {
-      if (num_args > 1) {
-        return "[" + std::to_string(num_args) + "]";
-      } else {
-        return "";
-      }
-    }
-
-    case NArgs::OPTIONAL:
-      return "[?]";
-
-    case NArgs::ZERO_OR_MORE:
-      return "[*]";
-
-    case NArgs::ONE_OR_MORE:
-      return "[+]";
-  }
 }
 
 void ArgumentParser::PrintHelp() const {
