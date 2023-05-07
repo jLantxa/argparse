@@ -235,22 +235,30 @@ TEST(ArgumentParser, optionals_required) {
 
 TEST(ArgumentParser, optional_with_many_flags) {
   argparse::ArgumentParser parser;
-  parser.AddOptional({"-a", "-b"}).NumArgs(1);
+  parser.AddOptional({"-a", "-b", "-c", "-d"}).NumArgs(1);
 
   const auto args0 = parser.Parse(std::vector<std::string>{"-a", "0"});
   EXPECT_TRUE(args0.Contains("-a"));
   EXPECT_TRUE(args0.Contains("-b"));
+  EXPECT_TRUE(args0.Contains("-c"));
+  EXPECT_TRUE(args0.Contains("-d"));
 
   const auto args1 = parser.Parse(std::vector<std::string>{"-b", "0"});
   EXPECT_TRUE(args1.Contains("-a"));
   EXPECT_TRUE(args1.Contains("-b"));
+  EXPECT_TRUE(args0.Contains("-c"));
+  EXPECT_TRUE(args0.Contains("-d"));
 
   const auto args2 =
       parser.Parse(std::vector<std::string>{"-a", "0", "-b", "1"});
   EXPECT_TRUE(args2.Contains("-a"));
   EXPECT_TRUE(args2.Contains("-b"));
+  EXPECT_TRUE(args0.Contains("-c"));
+  EXPECT_TRUE(args0.Contains("-d"));
   EXPECT_EQ(args2["-a"].As<int>(), 1);  // Argument values get overwriten
   EXPECT_EQ(args2["-b"].As<int>(), 1);
+  EXPECT_EQ(args2["-c"].As<int>(), 1);
+  EXPECT_EQ(args2["-d"].As<int>(), 1);
 }
 
 TEST(ArgumentParser, Positionals) {
