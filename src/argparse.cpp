@@ -41,8 +41,13 @@ namespace env {
 }  // namespace env
 
 static bool IsValidFlagName(const std::string& flag) {
-  // TODO: Check that flag contains no whitespace
-  return (!flag.empty() && flag.starts_with("-"));
+#if __cpp_lib_string_contains >= 202011L
+  const bool contains_spaces = flag.contains(" ");
+#else
+  const bool contains_spaces = (flag.find(" ") != std::string::npos);
+#endif
+
+  return (!flag.empty() && flag.starts_with("-") && !contains_spaces);
 }
 
 static bool IsNumber(const std::string& str) {

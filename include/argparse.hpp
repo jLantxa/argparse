@@ -94,18 +94,18 @@ class Argument final {
   [[nodiscard]] std::size_t Size() const;
 
   template <typename T>
-  T As(std::size_t index) const;
+  [[nodiscard]] T As(std::size_t index) const;
 
   template <typename T>
-  T As() const {
+  [[nodiscard]] T As() const {
     return As<T>(0);
   }
 
   template <typename T>
-  std::vector<T> AsVector() const;
+  [[nodiscard]] std::vector<T> AsVector() const;
 
-  operator std::vector<std::string>() const;
-  std::vector<std::string> operator*() const;
+  [[nodiscard]] operator std::vector<std::string>() const;
+  [[nodiscard]] std::vector<std::string> operator*() const;
 
  private:
   std::vector<std::string> m_values;
@@ -133,9 +133,9 @@ class ArgumentParser final {
   Optional& AddOptional(std::initializer_list<std::string> flags);
   Optional& AddOptional(const std::string& flag);
 
-  const ArgumentMap Parse(int argc, const char* argv[]);
-  const ArgumentMap Parse(std::span<const char*> args);
-  const ArgumentMap Parse(std::span<const std::string> args);
+  [[nodiscard]] const ArgumentMap Parse(int argc, const char* argv[]);
+  [[nodiscard]] const ArgumentMap Parse(std::span<const char*> args);
+  [[nodiscard]] const ArgumentMap Parse(std::span<const std::string> args);
 
   void PrintHelp() const;
 
@@ -154,14 +154,14 @@ class ArgumentParser final {
   void ParsePositionals(std::span<const std::string> args,
                         ArgumentMap& map) const;
 
-  std::size_t GetMinNumberOfArguments(
+  [[nodiscard]] std::size_t GetMinNumberOfArguments(
       std::list<Positional>::const_iterator begin,
       std::list<Positional>::const_iterator end) const;
 
   void ParseOptionals(std::span<const std::string> args,
                       ArgumentMap& map) const;
 
-  std::size_t TryMatchOptional(std::span<const std::string> args,
+  [[nodiscard]] std::size_t TryMatchOptional(std::span<const std::string> args,
                                ArgumentMap& map) const;
 };
 

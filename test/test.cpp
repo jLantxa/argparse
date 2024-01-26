@@ -243,7 +243,7 @@ TEST(ArgumentParser, optionals_required) {
   EXPECT_EQ(args0["--required"].As<float>(), 3.14f);
 
   const std::string in_args1[]{"--not-required"};
-  EXPECT_THROW(parser.Parse(in_args1),
+  EXPECT_THROW(const auto args = parser.Parse(in_args1),
                std::runtime_error);  // Required not present
 
   const std::string in_args2[]{"--required", "3.14"};
