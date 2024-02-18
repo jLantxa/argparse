@@ -31,11 +31,11 @@
 
 TEST(env, GetArgs) {
   int argc = 5;
-  const char* argv[5]{
+  const char *argv[5]{
       "arg0", "1", "two", "tres", "end",
   };
 
-  const std::span<const char*> args = argparse::env::GetArgs(argc, argv);
+  const std::span<const char *> args = argparse::env::GetArgs(argc, argv);
 
   ASSERT_EQ(args.size(), 5);
   ASSERT_THAT(args,
@@ -51,7 +51,7 @@ TEST(PositionalArgument, valid_names) {
 
 TEST(PositionalArgument, builder) {
   argparse::Positional pos0("pos0");
-  argparse::Positional& pos0_ref = pos0;
+  argparse::Positional &pos0_ref = pos0;
   pos0_ref.Help("Positional 0");
   EXPECT_EQ(pos0.name, "pos0");
   EXPECT_EQ(pos0.nargs, argparse::NArgs::NUMERIC);
@@ -59,14 +59,14 @@ TEST(PositionalArgument, builder) {
   EXPECT_EQ(pos0.help, "Positional 0");
 
   argparse::Positional pos1("pos1");
-  argparse::Positional& pos1_ref = pos1;
+  argparse::Positional &pos1_ref = pos1;
   pos1_ref.NumArgs(argparse::NArgs::OPTIONAL).Help("Positional 1");
   EXPECT_EQ(pos1.name, "pos1");
   EXPECT_EQ(pos1.nargs, argparse::NArgs::OPTIONAL);
   EXPECT_EQ(pos1.help, "Positional 1");
 
   argparse::Positional pos2("pos2");
-  argparse::Positional& pos2_ref = pos2;
+  argparse::Positional &pos2_ref = pos2;
   pos2_ref.NumArgs(3)
       .Help("Positional 2")
       .NumArgs(argparse::NArgs::ONE_OR_MORE);
@@ -75,7 +75,7 @@ TEST(PositionalArgument, builder) {
   EXPECT_EQ(pos2.help, "Positional 2");
 
   argparse::Positional pos3("pos3");
-  argparse::Positional& pos3_ref = pos3;
+  argparse::Positional &pos3_ref = pos3;
   pos3_ref.NumArgs(3).Help("Positional 3");
   EXPECT_EQ(pos3.name, "pos3");
   EXPECT_EQ(pos3.nargs, argparse::NArgs::NUMERIC);
@@ -85,7 +85,7 @@ TEST(PositionalArgument, builder) {
 
 TEST(PositionalArgument, builder_exception) {
   argparse::Positional pos0("pos0");
-  argparse::Positional& pos0_ref = pos0;
+  argparse::Positional &pos0_ref = pos0;
 
   // NumArgs cannot be 0 for Positional arguments
   EXPECT_THROW(pos0_ref.NumArgs(0), std::runtime_error);
@@ -106,7 +106,7 @@ TEST(OptionalArgument, valid_names_and_flags) {
 
 TEST(OptionalArgument, builder) {
   argparse::Optional opt0({"-f", "--flag1", "-q"});
-  argparse::Optional& opt0_ref = opt0;
+  argparse::Optional &opt0_ref = opt0;
   opt0_ref.Help("Optional 0");
   EXPECT_EQ(opt0.nargs, argparse::NArgs::NUMERIC);
   EXPECT_EQ(opt0.num_args, 1);
@@ -118,7 +118,7 @@ TEST(OptionalArgument, builder) {
   EXPECT_FALSE(opt0.HasFlag("--no-flag"));
 
   argparse::Optional opt1({"-f"});
-  argparse::Optional& opt1_ref = opt1;
+  argparse::Optional &opt1_ref = opt1;
   opt1_ref.Required(false).Help("Optional 1");
   EXPECT_EQ(opt1.nargs, argparse::NArgs::NUMERIC);
   EXPECT_EQ(opt1.num_args, 1);
@@ -128,7 +128,7 @@ TEST(OptionalArgument, builder) {
   EXPECT_FALSE(opt1.HasFlag("--flag1"));
 
   argparse::Optional opt2({"--long_flag"});
-  argparse::Optional& opt2_ref = opt2;
+  argparse::Optional &opt2_ref = opt2;
   opt2_ref.Required(true).NumArgs(1).Help("Optional 2");
   EXPECT_EQ(opt2.nargs, argparse::NArgs::NUMERIC);
   EXPECT_EQ(opt2.num_args, 1);
@@ -139,7 +139,7 @@ TEST(OptionalArgument, builder) {
 }
 
 TEST(Argument, AsString) {
-  const char* args[] = {"first", "second"};
+  const char *args[] = {"first", "second"};
   argparse::Argument arg(args);
   EXPECT_EQ(arg.Size(), 2);
   EXPECT_EQ(arg.As<std::string>(), "first");
@@ -149,7 +149,7 @@ TEST(Argument, AsString) {
 }
 
 TEST(Argument, AsInt) {
-  const char* args[] = {"-1", "13"};
+  const char *args[] = {"-1", "13"};
   argparse::Argument arg(args);
   EXPECT_EQ(arg.Size(), 2);
   EXPECT_EQ(arg.As<int>(), -1);
@@ -158,7 +158,7 @@ TEST(Argument, AsInt) {
 }
 
 TEST(Argument, AsLong) {
-  const char* args[] = {"-10", "130"};
+  const char *args[] = {"-10", "130"};
   argparse::Argument arg(args);
   EXPECT_EQ(arg.Size(), 2);
   EXPECT_EQ(arg.As<int>(), -10);
@@ -244,16 +244,16 @@ TEST(ArgumentParser, optionals_required) {
 
   const std::string in_args1[]{"--not-required"};
   EXPECT_THROW(const auto args = parser.Parse(in_args1),
-               std::runtime_error);  // Required not present
+               std::runtime_error); // Required not present
 
   const std::string in_args2[]{"--required", "3.14"};
   const auto args2 = parser.Parse(in_args2);
-  EXPECT_FALSE(args2.Contains("--not-required"));  // Not present, not required
+  EXPECT_FALSE(args2.Contains("--not-required")); // Not present, not required
   EXPECT_EQ(args2["--required"].As<float>(), 3.14f);
 
   const std::string in_args3[]{"-r", "3.14"};
   const auto args3 = parser.Parse(in_args3);
-  EXPECT_FALSE(args3.Contains("--not-required"));  // Not present, not required
+  EXPECT_FALSE(args3.Contains("--not-required")); // Not present, not required
   EXPECT_EQ(args3["-r"].As<float>(), 3.14f);
 }
 
@@ -279,7 +279,7 @@ TEST(ArgumentParser, optional_with_many_flags) {
   EXPECT_TRUE(args2.Contains("-b"));
   EXPECT_TRUE(args0.Contains("-c"));
   EXPECT_TRUE(args0.Contains("-d"));
-  EXPECT_EQ(args2["-a"].As<int>(), 1);  // Argument values get overwriten
+  EXPECT_EQ(args2["-a"].As<int>(), 1); // Argument values get overwriten
   EXPECT_EQ(args2["-b"].As<int>(), 1);
   EXPECT_EQ(args2["-c"].As<int>(), 1);
   EXPECT_EQ(args2["-d"].As<int>(), 1);

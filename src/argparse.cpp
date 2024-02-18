@@ -33,14 +33,14 @@ namespace argparse {
 
 namespace env {
 
-[[nodiscard]] const std::span<const char*> GetArgs(int argc,
-                                                   const char* argv[]) {
+[[nodiscard]] const std::span<const char *> GetArgs(int argc,
+                                                    const char *argv[]) {
   return {argv, static_cast<std::size_t>(argc)};
 }
 
-}  // namespace env
+} // namespace env
 
-static bool IsValidFlagName(const std::string& flag) {
+static bool IsValidFlagName(const std::string &flag) {
 #if __cpp_lib_string_contains >= 202011L
   const bool contains_spaces = flag.contains(" ");
 #else
@@ -50,18 +50,18 @@ static bool IsValidFlagName(const std::string& flag) {
   return (!flag.empty() && flag.starts_with("-") && !contains_spaces);
 }
 
-static bool IsNumber(const std::string& str) {
-  char* pEnd;
+static bool IsNumber(const std::string &str) {
+  char *pEnd;
   std::strtod(str.c_str(), &pEnd);
 
   return (pEnd == nullptr);
 }
 
-static bool IsOption(const std::string& str) {
+static bool IsOption(const std::string &str) {
   return (str.starts_with("-") && !IsNumber(str));
 }
 
-static NArgs GetNArgsFromString(const std::string& str) {
+static NArgs GetNArgsFromString(const std::string &str) {
   if (str == "?") {
     return NArgs::OPTIONAL;
   } else if (str == "*") {
@@ -77,42 +77,45 @@ static std::string PrettyNArgs(std::pair<NArgs, std::size_t> nargs) {
   const auto [nargs_flag, num_args] = nargs;
 
   switch (nargs_flag) {
-    case NArgs::NUMERIC: {
-      if (num_args > 1) {
-        return "[" + std::to_string(num_args) + "]";
-      } else {
-        return "";
-      }
+  case NArgs::NUMERIC: {
+    if (num_args > 1) {
+      return "[" + std::to_string(num_args) + "]";
+    } else {
+      return "";
     }
+  }
 
-    case NArgs::OPTIONAL:
-      return "[?]";
+  case NArgs::OPTIONAL:
+    return "[?]";
 
-    case NArgs::ZERO_OR_MORE:
-      return "[*]";
+  case NArgs::ZERO_OR_MORE:
+    return "[*]";
 
-    case NArgs::ONE_OR_MORE:
-      return "[+]";
+  case NArgs::ONE_OR_MORE:
+    return "[+]";
+
+  default:
+    return "";
   }
 }
 
-static constexpr auto StrToInt = [](const std::string& str) -> int {
+static constexpr auto StrToInt = [](const std::string &str) -> int {
   return std::stoi(str, nullptr);
 };
 
-static constexpr auto StrToLong = [](const std::string& str) -> long {
+static constexpr auto StrToLong = [](const std::string &str) -> long {
   return std::stol(str, nullptr);
 };
 
-static constexpr auto StrToFloat = [](const std::string& str) -> float {
+static constexpr auto StrToFloat = [](const std::string &str) -> float {
   return std::stof(str, nullptr);
 };
 
-static constexpr auto StrToDouble = [](const std::string& str) -> double {
+static constexpr auto StrToDouble = [](const std::string &str) -> double {
   return std::stod(str, nullptr);
 };
 
-Positional::Positional(const std::string& _name) : name(_name) {
+Positional::Positional(const std::string &_name) : name(_name) {
   if (name.empty()) {
     throw std::runtime_error("Arguments cannot have an empty name.");
   } else if (name.starts_with('-')) {
@@ -120,7 +123,7 @@ Positional::Positional(const std::string& _name) : name(_name) {
   }
 }
 
-Positional& Positional::NumArgs(std::size_t num) {
+Positional &Positional::NumArgs(std::size_t num) {
   if (num == 0) {
     throw std::runtime_error("NumArgs cannot be 0 for Positional arguments.");
   }
@@ -131,17 +134,17 @@ Positional& Positional::NumArgs(std::size_t num) {
   return *this;
 }
 
-Positional& Positional::NumArgs(NArgs num) {
+Positional &Positional::NumArgs(NArgs num) {
   nargs = num;
   return *this;
 }
 
-Positional& Positional::NumArgs(const std::string& num) {
+Positional &Positional::NumArgs(const std::string &num) {
   const NArgs nargs = GetNArgsFromString(num);
   return NumArgs(nargs);
 }
 
-Positional& Positional::Help(const std::string& help_str) {
+Positional &Positional::Help(const std::string &help_str) {
   help = help_str;
   return *this;
 }
@@ -151,7 +154,7 @@ std::pair<NArgs, std::size_t> Positional::GetNArgs() const {
 }
 
 Optional::Optional(std::initializer_list<std::string> flag_list) {
-  for (const auto& flag : flag_list) {
+  for (const auto &flag : flag_list) {
     if (!IsValidFlagName(flag)) {
       throw std::runtime_error(
           "Invalid flag name. Flags must start with '-' or '--'");
@@ -161,17 +164,17 @@ Optional::Optional(std::initializer_list<std::string> flag_list) {
   }
 }
 
-Optional::Optional(const std::string& flag)
+Optional::Optional(const std::string &flag)
     : Optional(std::initializer_list<std::string>{flag}) {}
 
-Optional& Optional::NumArgs(std::size_t num) {
+Optional &Optional::NumArgs(std::size_t num) {
   nargs = NArgs::NUMERIC;
   num_args = num;
 
   return *this;
 }
 
-Optional& Optional::NumArgs(NArgs num) {
+Optional &Optional::NumArgs(NArgs num) {
   if (required &&
       ((nargs == NArgs::OPTIONAL) || (nargs == NArgs::ZERO_OR_MORE))) {
     throw std::runtime_error("An required optional cannot be made required.");
@@ -181,12 +184,12 @@ Optional& Optional::NumArgs(NArgs num) {
   return *this;
 }
 
-Optional& Optional::NumArgs(const std::string& num) {
+Optional &Optional::NumArgs(const std::string &num) {
   const NArgs nargs = GetNArgsFromString(num);
   return NumArgs(nargs);
 }
 
-Optional& Optional::Required(bool req) {
+Optional &Optional::Required(bool req) {
   if ((req == true) &&
       ((nargs == NArgs::OPTIONAL) || nargs == NArgs::ZERO_OR_MORE)) {
     throw std::runtime_error("An optional argument cannot be made required.");
@@ -196,7 +199,7 @@ Optional& Optional::Required(bool req) {
   return *this;
 }
 
-Optional& Optional::Help(const std::string& help_str) {
+Optional &Optional::Help(const std::string &help_str) {
   help = help_str;
   return *this;
 }
@@ -205,13 +208,13 @@ std::pair<NArgs, std::size_t> Optional::GetNArgs() const {
   return {nargs, num_args};
 }
 
-bool Optional::HasFlag(const std::string& flag) const {
+bool Optional::HasFlag(const std::string &flag) const {
   bool has_flag =
       (std::find(flags.cbegin(), flags.cend(), flag) != flags.cend());
   return has_flag;
 }
 
-Argument::Argument(std::span<const char*> values) {
+Argument::Argument(std::span<const char *> values) {
   std::copy(values.begin(), values.end(), std::back_inserter(m_values));
 }
 
@@ -221,77 +224,67 @@ Argument::Argument(std::span<const std::string> values) {
 
 std::size_t Argument::Size() const { return m_values.size(); }
 
-template <>
-std::string Argument::As<std::string>(std::size_t index) const {
+template <> std::string Argument::As<std::string>(std::size_t index) const {
   return m_values[index];
 }
 
-template <>
-std::vector<std::string> Argument::AsVector<std::string>() const {
+template <> std::vector<std::string> Argument::AsVector<std::string>() const {
   return m_values;
 }
 
-template <>
-int Argument::As<int>(std::size_t index) const {
+template <> int Argument::As<int>(std::size_t index) const {
   return StrToInt(m_values[index]);
 }
 
-template <>
-std::vector<int> Argument::AsVector<int>() const {
+template <> std::vector<int> Argument::AsVector<int>() const {
   std::vector<int> values;
   std::transform(m_values.cbegin(), m_values.cend(), std::back_inserter(values),
                  StrToInt);
   return values;
 }
 
-template <>
-long Argument::As<long>(std::size_t index) const {
+template <> long Argument::As<long>(std::size_t index) const {
   return StrToLong(m_values[index]);
 }
 
-template <>
-std::vector<long> Argument::AsVector<long>() const {
+template <> std::vector<long> Argument::AsVector<long>() const {
   std::vector<long> values;
   std::transform(m_values.cbegin(), m_values.cend(), std::back_inserter(values),
                  StrToLong);
   return values;
 }
 
-template <>
-float Argument::As<float>(std::size_t index) const {
+template <> float Argument::As<float>(std::size_t index) const {
   return StrToFloat(m_values[index]);
 }
 
-template <>
-std::vector<float> Argument::AsVector<float>() const {
+template <> std::vector<float> Argument::AsVector<float>() const {
   std::vector<float> values;
   std::transform(m_values.cbegin(), m_values.cend(), std::back_inserter(values),
                  StrToFloat);
   return values;
 }
 
-template <>
-double Argument::As<double>(std::size_t index) const {
+template <> double Argument::As<double>(std::size_t index) const {
   return StrToDouble(m_values[index]);
 }
 
-template <>
-std::vector<double> Argument::AsVector<double>() const {
+template <> std::vector<double> Argument::AsVector<double>() const {
   std::vector<double> values;
   std::transform(m_values.cbegin(), m_values.cend(), std::back_inserter(values),
                  StrToDouble);
   return values;
 }
 
-void ArgumentMap::Add(const std::string& name, const Argument& arg) {
+void ArgumentMap::Add(const std::string &name, const Argument &arg) {
   m_map.insert_or_assign(name, arg);
 }
 
-bool ArgumentMap::Contains(const std::string& name) const {
+bool ArgumentMap::Contains(const std::string &name) const {
   return m_map.contains(name);
 }
 
-const Argument& ArgumentMap::operator[](const std::string& name) const {
+const Argument &ArgumentMap::operator[](const std::string &name) const {
   const auto it = m_map.find(name);
   if (it == m_map.end()) {
     throw std::runtime_error("Undefined argument " + std::string{name} + ".");
@@ -300,29 +293,29 @@ const Argument& ArgumentMap::operator[](const std::string& name) const {
   return it->second;
 }
 
-ArgumentParser::ArgumentParser(const std::string& description)
+ArgumentParser::ArgumentParser(const std::string &description)
     : m_program_description(description) {}
 
 void ArgumentParser::IgnoreFirstArgument(bool ignore) {
   m_ignore_first_argument = ignore;
 }
 
-Positional& ArgumentParser::AddPositional(const std::string& name) {
+Positional &ArgumentParser::AddPositional(const std::string &name) {
   if (m_positional_names.contains(name)) {
     throw std::runtime_error("Argument name " + std::string{name} +
                              " redefined.");
   }
   m_positional_names.insert(name);
 
-  Positional& positional = m_positionals.emplace_back(name);
+  Positional &positional = m_positionals.emplace_back(name);
   return positional;
 }
 
-Optional& ArgumentParser::AddOptional(
-    std::initializer_list<std::string> flags) {
-  Optional& optional = m_optionals.emplace_back(flags);
+Optional &
+ArgumentParser::AddOptional(std::initializer_list<std::string> flags) {
+  Optional &optional = m_optionals.emplace_back(flags);
 
-  for (const auto& flag : flags) {
+  for (const auto &flag : flags) {
     if (m_flags_map.contains(flag)) {
       throw std::runtime_error("Flag " + std::string{flag} + " redefined.");
     } else {
@@ -333,16 +326,16 @@ Optional& ArgumentParser::AddOptional(
   return optional;
 }
 
-Optional& ArgumentParser::AddOptional(const std::string& flag) {
+Optional &ArgumentParser::AddOptional(const std::string &flag) {
   return AddOptional(std::initializer_list<std::string>{flag});
 }
 
-const ArgumentMap ArgumentParser::Parse(int argc, const char* argv[]) {
+const ArgumentMap ArgumentParser::Parse(int argc, const char *argv[]) {
   const auto args = env::GetArgs(argc, argv);
   return Parse(args);
 }
 
-const ArgumentMap ArgumentParser::Parse(std::span<const char*> args) {
+const ArgumentMap ArgumentParser::Parse(std::span<const char *> args) {
   std::vector<std::string> str_args;
   std::copy(args.begin(), args.end(), std::back_inserter(str_args));
   return Parse(str_args);
@@ -376,13 +369,13 @@ const ArgumentMap ArgumentParser::Parse(std::span<const std::string> in_args) {
 
 void ArgumentParser::ValidateRequiredOptionals(
     std::span<const std::string> args) const {
-  for (const auto& optional : m_optionals) {
+  for (const auto &optional : m_optionals) {
     if (optional.required == false) {
       continue;
     }
 
     bool found_required = false;
-    for (const auto& flag : optional.flags) {
+    for (const auto &flag : optional.flags) {
       const auto it = std::find(args.begin(), args.end(), flag);
       if (it != args.end()) {
         found_required = true;
@@ -419,17 +412,17 @@ std::size_t ArgumentParser::GetMinNumberOfArguments(
   for (auto it = begin; it != end; ++it) {
     const auto [nargs, num_args] = it->GetNArgs();
     switch (nargs) {
-      case NArgs::NUMERIC:
-        count += num_args;
-        break;
+    case NArgs::NUMERIC:
+      count += num_args;
+      break;
 
-      case NArgs::OPTIONAL:
-      case NArgs::ZERO_OR_MORE:
-        break;
+    case NArgs::OPTIONAL:
+    case NArgs::ZERO_OR_MORE:
+      break;
 
-      case NArgs::ONE_OR_MORE:
-        ++count;
-        break;
+    case NArgs::ONE_OR_MORE:
+      ++count;
+      break;
     }
   }
 
@@ -437,7 +430,7 @@ std::size_t ArgumentParser::GetMinNumberOfArguments(
 }
 
 void ArgumentParser::ParsePositionals(std::span<const std::string> args,
-                                      ArgumentMap& map) const {
+                                      ArgumentMap &map) const {
   const std::size_t num_args = args.size();
   std::size_t current_arg_index = 0;
 
@@ -448,40 +441,40 @@ void ArgumentParser::ParsePositionals(std::span<const std::string> args,
         GetMinNumberOfArguments(std::next(pos_it), m_positionals.end());
     const std::size_t num_remaining_args =
         num_args - current_arg_index - min_num_other_positionals;
-    const auto& name = pos_it->name;
+    const auto &name = pos_it->name;
 
-    std::size_t num_matched_args;
+    std::size_t num_matched_args = 0;
     switch (pos_nargs) {
-      case NArgs::NUMERIC: {
-        if (num_remaining_args < pos_num_args) {
-          throw std::runtime_error("Positional argument " + name +
-                                   " requires " + std::to_string(pos_num_args) +
-                                   " values but found " +
-                                   std::to_string(num_remaining_args) + ".");
-        }
-        num_matched_args = pos_num_args;
-        break;
+    case NArgs::NUMERIC: {
+      if (num_remaining_args < pos_num_args) {
+        throw std::runtime_error("Positional argument " + name + " requires " +
+                                 std::to_string(pos_num_args) +
+                                 " values but found " +
+                                 std::to_string(num_remaining_args) + ".");
       }
+      num_matched_args = pos_num_args;
+      break;
+    }
 
-      case NArgs::ONE_OR_MORE: {
-        if (num_remaining_args < 1) {
-          throw std::runtime_error(
-              "Positional argument " + name +
-              " requires one or more values but found none.");
-        }
-        num_matched_args = num_remaining_args;
-        break;
+    case NArgs::ONE_OR_MORE: {
+      if (num_remaining_args < 1) {
+        throw std::runtime_error(
+            "Positional argument " + name +
+            " requires one or more values but found none.");
       }
+      num_matched_args = num_remaining_args;
+      break;
+    }
 
-      case NArgs::ZERO_OR_MORE: {
-        num_matched_args = num_remaining_args;
-        break;
-      }
+    case NArgs::ZERO_OR_MORE: {
+      num_matched_args = num_remaining_args;
+      break;
+    }
 
-      case NArgs::OPTIONAL: {
-        num_matched_args = (num_remaining_args > 0) ? 1 : 0;
-        break;
-      }
+    case NArgs::OPTIONAL: {
+      num_matched_args = (num_remaining_args > 0) ? 1 : 0;
+      break;
+    }
     }
     const auto subspan = args.subspan(current_arg_index, num_matched_args);
     current_arg_index += num_matched_args;
@@ -494,7 +487,7 @@ void ArgumentParser::ParsePositionals(std::span<const std::string> args,
 }
 
 void ArgumentParser::ParseOptionals(std::span<const std::string> args,
-                                    ArgumentMap& map) const {
+                                    ArgumentMap &map) const {
   std::size_t current_index = 0;
   const std::size_t args_size = args.size();
   while (current_index < args_size) {
@@ -504,8 +497,8 @@ void ArgumentParser::ParseOptionals(std::span<const std::string> args,
 }
 
 std::size_t ArgumentParser::TryMatchOptional(std::span<const std::string> args,
-                                             ArgumentMap& map) const {
-  const std::string& token = args[0];
+                                             ArgumentMap &map) const {
+  const std::string &token = args[0];
 
   if (!IsOption(token)) {
     return 1;
@@ -527,57 +520,56 @@ std::size_t ArgumentParser::TryMatchOptional(std::span<const std::string> args,
     ++num_option_values;
   }
 
-  const Optional& optional = optional_it->second;
+  const Optional &optional = optional_it->second;
   const std::span<const std::string> option_values =
       args.subspan(1, num_option_values);
   switch (optional.nargs) {
-    // N
-    case NArgs::NUMERIC: {
-      if (num_option_values != optional.num_args) {
-        throw std::runtime_error("Option " + std::string{token} + " expected " +
-                                 std::to_string(optional.num_args) +
-                                 " arguments but found " +
-                                 std::to_string(num_option_values) + ".");
-      }
-      break;
+  // N
+  case NArgs::NUMERIC: {
+    if (num_option_values != optional.num_args) {
+      throw std::runtime_error("Option " + std::string{token} + " expected " +
+                               std::to_string(optional.num_args) +
+                               " arguments but found " +
+                               std::to_string(num_option_values) + ".");
     }
+    break;
+  }
 
-    // ?
-    case NArgs::OPTIONAL: {
-      if (num_option_values > 1) {
-        throw std::runtime_error("Option " + std::string{token} +
-                                 " expected zero or one arguments but found " +
-                                 std::to_string(num_option_values) + ".");
-      }
-      break;
+  // ?
+  case NArgs::OPTIONAL: {
+    if (num_option_values > 1) {
+      throw std::runtime_error("Option " + std::string{token} +
+                               " expected zero or one arguments but found " +
+                               std::to_string(num_option_values) + ".");
     }
+    break;
+  }
 
-    // *
-    case NArgs::ZERO_OR_MORE: {
-      // Everything
-      break;
+  // *
+  case NArgs::ZERO_OR_MORE: {
+    // Everything
+    break;
+  }
+
+  // +
+  case NArgs::ONE_OR_MORE: {
+    if (num_option_values < 1) {
+      throw std::runtime_error("Option " + std::string{token} +
+                               " expected one or more arguments but found 0.");
     }
+    break;
+  }
 
-    // +
-    case NArgs::ONE_OR_MORE: {
-      if (num_option_values < 1) {
-        throw std::runtime_error(
-            "Option " + std::string{token} +
-            " expected one or more arguments but found 0.");
-      }
-      break;
-    }
-
-    default:
-      throw std::runtime_error(
-          "Unknown number of required optional arguments for " +
-          std::string{token} + ".");
+  default:
+    throw std::runtime_error(
+        "Unknown number of required optional arguments for " +
+        std::string{token} + ".");
   }
 
   /* TODO: Implement a second map for optional flags to avoid duplicating
    * arguments in the map.
    */
-  for (const auto& flag : optional.flags) {
+  for (const auto &flag : optional.flags) {
     map.Add(flag, option_values);
   }
 
@@ -590,7 +582,7 @@ void ArgumentParser::PrintHelp() const {
   }
 
   std::cout << "positional arguments:\n";
-  for (const auto& positional : m_positionals) {
+  for (const auto &positional : m_positionals) {
     std::cout << " " + positional.name << " "
               << PrettyNArgs(positional.GetNArgs()) << "\t" << positional.help
               << "\n";
@@ -600,7 +592,7 @@ void ArgumentParser::PrintHelp() const {
 
   // TODO: Print NArgs
   std::cout << "optional arguments:\n";
-  for (const auto& optional : m_optionals) {
+  for (const auto &optional : m_optionals) {
     std::cout << " ";
     std::stringstream ss;
 
@@ -618,4 +610,4 @@ void ArgumentParser::PrintHelp() const {
   }
 }
 
-}  // namespace argparse
+} // namespace argparse
